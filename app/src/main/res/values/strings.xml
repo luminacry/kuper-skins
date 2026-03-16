@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KLWP Min Demo</string>
+    <string name="wallpaper_name">KLWP Min Demo Wallpaper</string>
+    <string name="wallpaper_description">A tiny live wallpaper demo for testing canvas rendering, offsets, and touch input.</string>
+
+    <string name="main_title">Minimal Live Wallpaper Demo</string>
+    <string name="main_summary">This sample wires up a basic WallpaperService, opens the system wallpaper preview, and renders a small animated scene with time, touch ripple, and home-screen offset.</string>
+    <string name="action_open_preview">Open direct preview</string>
+    <string name="action_open_chooser">Open wallpaper chooser</string>
+    <string name="direct_preview_unavailable">Direct preview is not available on this device. Opening the chooser instead.</string>
+    <string name="chooser_unavailable">Wallpaper chooser is not available on this device.</string>
+    <string name="demo_notes">What to test:\n- swipe between launcher pages and watch the orb move\n- tap the wallpaper to trigger a ripple\n- confirm the time label updates while the wallpaper is visible</string>
+</resources>

@@ -1,0 +1,13 @@
+{
+  "java.jdt.ls.java.home": "C:\\Users\\HUA\\.jdks\\openjdk-25.0.2",
+  "java.import.gradle.java.home": "C:\\Users\\HUA\\.jdks\\openjdk-25.0.2",
+  "java.import.gradle.wrapper.enabled": true,
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-25",
+      "path": "C:\\Users\\HUA\\.jdks\\openjdk-25.0.2",
+      "default": true
+    }
+  ],
+  "java.configuration.updateBuildConfiguration": "interactive"
+}

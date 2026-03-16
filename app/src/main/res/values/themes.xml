@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.KlwpDemo" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#101A33</item>
+        <item name="android:windowBackground">#101A33</item>
+    </style>
+</resources>
