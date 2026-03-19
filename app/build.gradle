@@ -19,9 +19,18 @@ android {
         versionName "1.0"
     }
 
+    signingConfigs {
+        // 当前仓库未提供独立发布 keystore，先复用本机默认 debug keystore，
+        // 以便生成可安装的 release 安装包；后续上线前再替换为正式签名。
+        release {
+            initWith signingConfigs.debug
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
