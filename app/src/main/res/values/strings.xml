@@ -1,14 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">KLWP Min Demo</string>
-    <string name="wallpaper_name">KLWP Min Demo Wallpaper</string>
-    <string name="wallpaper_description">A tiny live wallpaper demo for testing canvas rendering, offsets, and touch input.</string>
+    <string name="app_name">KLWP 编辑器复刻</string>
+    <string name="wallpaper_name">KLWP 演示壁纸</string>
+    <string name="wallpaper_description">用于编辑器预览与运行时场景联调的演示壁纸。</string>
 
-    <string name="main_title">Minimal Live Wallpaper Demo</string>
-    <string name="main_summary">This sample wires up a basic WallpaperService, opens the system wallpaper preview, and renders a small animated scene with time, touch ripple, and home-screen offset.</string>
-    <string name="action_open_preview">Open direct preview</string>
-    <string name="action_open_chooser">Open wallpaper chooser</string>
-    <string name="direct_preview_unavailable">Direct preview is not available on this device. Opening the chooser instead.</string>
-    <string name="chooser_unavailable">Wallpaper chooser is not available on this device.</string>
-    <string name="demo_notes">What to test:\n- swipe between launcher pages and watch the orb move\n- tap the wallpaper to trigger a ripple\n- confirm the time label updates while the wallpaper is visible</string>
+    <string name="editor_menu">打开菜单</string>
+    <string name="editor_save">保存</string>
+    <string name="editor_history">撤销</string>
+    <string name="editor_add">新增图层</string>
+
+    <string name="editor_project_strip_top">项</string>
+    <string name="editor_project_strip_middle">目</string>
+    <string name="editor_project_strip_bottom">夹</string>
+
+    <string name="editor_tool_expand">适配画布</string>
+    <string name="editor_tool_focus">聚焦选择</string>
+    <string name="editor_tool_lock">锁定图层</string>
+    <string name="editor_tool_layers">图层面板</string>
+    <string name="editor_tool_adjust">调整属性</string>
+    <string name="editor_tool_split">分栏编辑</string>
+    <string name="editor_tool_widgets">组件库</string>
+    <string name="editor_tool_charts">数据统计</string>
+    <string name="editor_tool_settings">编辑器设置</string>
+
+    <string name="editor_issue_missing_request">丢失请求: 设置为壁纸</string>
+    <string name="editor_fix_now">立即修复</string>
+
+    <string name="editor_property_none">未选择图层</string>
+    <string name="editor_property_close">关闭属性面板</string>
+    <string name="editor_property_position_x">X 位置</string>
+    <string name="editor_property_position_y">Y 位置</string>
+    <string name="editor_property_opacity">不透明度</string>
+    <string name="editor_property_scale">缩放</string>
+    <string name="editor_property_fill">填充</string>
+    <string name="editor_delete_layer">删除图层</string>
+
+    <string name="editor_layers_subtitle_dynamic">项目 %1$d / %2$d</string>
+
+    <string name="editor_tab_layers">图层</string>
+    <string name="editor_tab_action">动作</string>
+    <string name="editor_tab_data">数据</string>
+    <string name="editor_tab_global">全局</string>
+    <string name="editor_tab_coming_soon">该标签页暂未开放</string>
+
+    <string name="editor_layer_1_name">应用页</string>
+    <string name="editor_layer_1_desc">矩形, 矩形, 文本, 电量…</string>
+    <string name="editor_layer_2_name">应用页</string>
+    <string name="editor_layer_2_desc">圆形, 光晕, 焦点圆</string>
+    <string name="editor_layer_3_name">主屏壁纸</string>
+    <string name="editor_layer_3_desc">矩形, 文本, 雾层</string>
+
+    <string name="editor_add_shape_rectangle">添加矩形</string>
+    <string name="editor_add_shape_circle">添加圆形</string>
+    <string name="editor_add_shape_failed">添加图形失败</string>
+    <string name="editor_delete_shape_failed">删除图层失败</string>
+    <string name="editor_layer_visibility_failed">更新图层可见性失败</string>
+    <string name="editor_fill_shape_only">只有图形图层支持填充颜色</string>
+    <string name="editor_fill_apply_failed">更新图形填充颜色失败</string>
+    <string name="editor_fill_color_rose">设置粉色填充</string>
+    <string name="editor_fill_color_blue">设置蓝色填充</string>
+    <string name="editor_fill_color_mint">设置薄荷色填充</string>
+    <string name="editor_undo_empty">没有可撤销的操作</string>
+    <string name="editor_redo_empty">没有可重做的操作</string>
 </resources>

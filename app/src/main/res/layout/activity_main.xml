@@ -1,54 +1,587 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:background="@color/editor_bg">
 
+    <!-- 编辑器主容器：顶部工具栏、中央工作区和底部图层区都挂在这里。 -->
     <LinearLayout
+        android:id="@+id/editor_root_content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@color/editor_bg"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingTop="0dp">
 
+        <!-- 顶部菜单栏：保留状态栏留白，但不直接展示系统状态内容。 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@color/editor_bg"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/editor_menu"
+                android:padding="0dp"
+                android:scaleType="center"
+                android:src="@drawable/ic_header_menu_vector" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/button_editor_redo"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/editor_save"
+                android:padding="0dp"
+                android:scaleType="center"
+                android:src="@drawable/ic_header_save_vector" />
+
+            <ImageButton
+                android:id="@+id/button_editor_undo"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/editor_history"
+                android:padding="0dp"
+                android:scaleType="center"
+                android:src="@drawable/ic_header_history_vector" />
+
+            <ImageButton
+                android:id="@+id/button_add_layer"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/editor_add"
+                android:padding="0dp"
+                android:scaleType="center"
+                android:src="@drawable/ic_header_plus_vector" />
+        </LinearLayout>
+
+        <!-- 中央工作区：左侧项目条、中间预览框、右侧工具塔。 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="402dp"
+            android:background="@drawable/bg_editor_workspace"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="46dp"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@null"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/bg_pencil_project_strip_full" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:alpha="0"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingTop="24dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_pencil_editor_folder" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/editor_project_strip_top"
+                        android:textColor="@color/editor_text_on_dark"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/editor_project_strip_middle"
+                        android:textColor="@color/editor_text_on_dark"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/editor_project_strip_bottom"
+                        android:textColor="@color/editor_text_on_dark"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="382dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="28dp"
+                    android:layout_marginEnd="32dp"
+                    android:background="@drawable/bg_editor_preview_frame"
+                    android:padding="1dp">
+
+                    <com.example.klwpdemo.EditorRuntimePreviewView
+                        android:id="@+id/runtime_preview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="#1C1C1C" />
+                </FrameLayout>
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/editor_tools_rail"
+                android:layout_width="60dp"
+                android:layout_height="match_parent">
+
+                <!-- 工具塔底图来自 Pencil 导出的稿源素材，代码只负责对齐交互层。 -->
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@null"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/bg_pencil_tools_rail_full" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:alpha="0"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingTop="13dp"
+                    android:paddingBottom="13dp">
+
+                    <ImageButton
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_editor_icon_button_tool"
+                        android:contentDescription="@string/editor_tool_expand"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_pencil_editor_fit" />
+
+                    <ImageButton
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_editor_icon_button_tool"
+                        android:contentDescription="@string/editor_tool_focus"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_pencil_editor_focus" />
+
+                    <ImageButton
+                        android:id="@+id/button_tool_lock"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_editor_icon_button_tool"
+                        android:contentDescription="@string/editor_tool_lock"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_pencil_editor_lock" />
+
+                    <ImageButton
+                        android:id="@+id/button_tool_layers"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_editor_icon_button_tool"
+                        android:contentDescription="@string/editor_tool_layers"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_pencil_editor_layers" />
+
+                    <ImageButton
+                        android:id="@+id/button_tool_adjust"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_editor_icon_button_tool"
+                        android:contentDescription="@string/editor_tool_adjust"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_pencil_editor_pause" />
+
+                    <ImageButton
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_editor_icon_button_tool"
+                        android:contentDescription="@string/editor_tool_widgets"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_pencil_editor_widgets" />
+
+                    <ImageButton
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_editor_icon_button_tool"
+                        android:contentDescription="@string/editor_tool_charts"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_pencil_editor_chart" />
+
+                    <ImageButton
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_editor_icon_button_tool"
+                        android:contentDescription="@string/editor_tool_settings"
+                        android:padding="8dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_pencil_editor_settings" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_editor_issue_bar"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingEnd="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/editor_issue_missing_request"
+                android:textColor="@color/editor_text_on_dark"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/editor_fix_now"
+                android:textColor="@color/editor_fix_text"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- 图层统计文本只作为逻辑载体，不直接显示在界面上。 -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/main_title"
-            android:textColor="@android:color/white"
-            android:textSize="28sp"
-            android:textStyle="bold" />
+            android:id="@+id/text_layer_count"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
-        <TextView
+        <!-- 底部区域：上方页签，下方图层列表。 -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:lineSpacingExtra="4dp"
-            android:text="测试内容"
-            android:textColor="#D8E2FF"
-            android:textSize="16sp" />
+            android:layout_height="316dp"
+            android:background="@color/editor_list_surface"
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/button_open_preview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="@string/action_open_preview" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-        <Button
-            android:id="@+id/button_open_chooser"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/action_open_chooser" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="49dp"
+                    android:orientation="horizontal">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:lineSpacingExtra="4dp"
-            android:text="@string/demo_notes"
-            android:textColor="#C7D2FE"
-            android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/tab_layers"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_editor_tab_active"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="@string/editor_tab_layers"
+                        android:textColor="@color/editor_text_primary"
+                        android:textSize="12sp" />
 
+                    <TextView
+                        android:id="@+id/tab_action"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_editor_tab_idle"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="@string/editor_tab_action"
+                        android:textColor="@color/editor_text_secondary"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tab_data"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_editor_tab_idle"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="@string/editor_tab_data"
+                        android:textColor="@color/editor_text_secondary"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tab_global"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_editor_tab_idle"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="@string/editor_tab_global"
+                        android:textColor="@color/editor_text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <ScrollView
+                    android:id="@+id/layer_list_scroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="267dp"
+                    android:background="@drawable/bg_editor_layer_list_surface"
+                    android:clipToPadding="false"
+                    android:fillViewport="true"
+                    android:paddingStart="0dp"
+                    android:paddingTop="0dp"
+                    android:paddingEnd="0dp"
+                    android:paddingBottom="0dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/layer_list_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </ScrollView>
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
-</ScrollView>
+
+    <!-- 右侧属性浮层：只有进入编辑态时才覆盖显示。 -->
+    <ScrollView
+        android:id="@+id/editor_property_panel"
+        android:layout_width="182dp"
+        android:layout_height="336dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="144dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/bg_editor_property_panel"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/text_selected_layer_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:text="@string/editor_property_none"
+                    android:textColor="@color/editor_text_primary"
+                    android:textSize="12sp" />
+
+                <ImageButton
+                    android:id="@+id/button_property_close"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/bg_editor_chip_idle"
+                    android:contentDescription="@string/editor_property_close"
+                    android:padding="7dp"
+                    android:src="@drawable/ic_editor_close"
+                    android:tint="@color/editor_text_primary" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/button_property_delete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_editor_secondary_button"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="@string/editor_delete_layer"
+                android:textAllCaps="false"
+                android:textColor="@color/editor_text_primary"
+                android:textSize="12sp" />
+
+            <!-- 仅当选中形状图层时才展示填充色配置。 -->
+            <LinearLayout
+                android:id="@+id/property_fill_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/editor_property_fill"
+                    android:textColor="@color/editor_text_secondary"
+                    android:textSize="11sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/button_fill_color_rose"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/bg_editor_fill_swatch"
+                        android:contentDescription="@string/editor_fill_color_rose" />
+
+                    <ImageButton
+                        android:id="@+id/button_fill_color_blue"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_editor_fill_swatch"
+                        android:contentDescription="@string/editor_fill_color_blue" />
+
+                    <ImageButton
+                        android:id="@+id/button_fill_color_mint"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_editor_fill_swatch"
+                        android:contentDescription="@string/editor_fill_color_mint" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/editor_property_position_x"
+                android:textColor="@color/editor_text_secondary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/text_position_x_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="0"
+                android:textColor="@color/editor_text_primary"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seek_position_x"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="400"
+                android:progress="200" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/editor_property_position_y"
+                android:textColor="@color/editor_text_secondary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/text_position_y_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="0"
+                android:textColor="@color/editor_text_primary"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seek_position_y"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="400"
+                android:progress="200" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/editor_property_opacity"
+                android:textColor="@color/editor_text_secondary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/text_opacity_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="100%"
+                android:textColor="@color/editor_text_primary"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seek_opacity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:progress="100" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/editor_property_scale"
+                android:textColor="@color/editor_text_secondary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/text_scale_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="100%"
+                android:textColor="@color/editor_text_primary"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seek_scale"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="400"
+                android:min="20"
+                android:progress="100" />
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

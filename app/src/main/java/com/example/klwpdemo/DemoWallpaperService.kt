@@ -1,33 +1,34 @@
 package com.example.klwpdemo
 
+import android.annotation.TargetApi
 import android.app.WallpaperColors
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.LinearGradient
-import android.graphics.Paint
-import android.graphics.RectF
-import android.graphics.Shader
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.service.wallpaper.WallpaperService
-import android.text.format.DateFormat
 import android.view.MotionEvent
 import android.view.SurfaceHolder
-import java.util.Locale
-import kotlin.math.min
-import kotlin.math.sin
+import com.example.klwpdemo.runtime.DemoWallpaperRuntime
 
+/** 真正提供动态壁纸绘制入口的系统 Service。 */
 class DemoWallpaperService : WallpaperService() {
 
+    /** 为系统返回壁纸引擎实例。 */
     override fun onCreateEngine(): Engine = DemoEngine()
 
+    /** 负责驱动帧循环、触摸输入和壁纸绘制的引擎实现。 */
     private inner class DemoEngine : Engine() {
+        /** 约 30fps 的刷新间隔。 */
         private val frameDelayMs = 33L
-        private val rippleDurationMs = 650L
+        /** 壁纸运行时，负责生成文档并执行渲染。 */
+        private val runtime = DemoWallpaperRuntime(this@DemoWallpaperService)
 
+        /** 主线程调度器，用于驱动持续刷新。 */
         private val handler = Handler(Looper.getMainLooper())
+        /** 可见时重复执行的绘制任务。 */
         private val drawRunner = object : Runnable {
             override fun run() {
                 drawFrame()
@@ -37,51 +38,17 @@ class DemoWallpaperService : WallpaperService() {
             }
         }
 
-        private val backgroundPaint = Paint()
-        private val orbPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#F7C948")
-        }
-        private val orbCorePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
-        }
-        private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
-            textSize = 54f
-            isFakeBoldText = true
-            isSubpixelText = true
-        }
-        private val detailPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#C7D2FE")
-            textSize = 28f
-            isSubpixelText = true
-        }
-        private val ripplePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = 5f
-            color = Color.WHITE
-        }
-        private val hazePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb(36, 255, 255, 255)
-        }
-        private val panelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb(55, 255, 255, 255)
-        }
-        private val bottomPanel = RectF()
-
+        /** 当前壁纸是否处于可见状态。 */
         private var visible = false
-        private var width = 0
-        private var height = 0
-        private var xOffset = 0.5f
-        private var touchX = -1f
-        private var touchY = -1f
-        private var rippleStartMillis = -1L
 
+        /** 初始化引擎时打开触摸和偏移量监听。 */
         override fun onCreate(surfaceHolder: SurfaceHolder) {
             super.onCreate(surfaceHolder)
             setTouchEventsEnabled(true)
             setOffsetNotificationsEnabled(true)
         }
 
+        /** 根据可见性决定是否继续帧循环。 */
         override fun onVisibilityChanged(visible: Boolean) {
             this.visible = visible
             handler.removeCallbacks(drawRunner)
@@ -91,6 +58,7 @@ class DemoWallpaperService : WallpaperService() {
             }
         }
 
+        /** 画布尺寸变化后刷新视口。 */
         override fun onSurfaceChanged(
             holder: SurfaceHolder,
             format: Int,
@@ -98,12 +66,11 @@ class DemoWallpaperService : WallpaperService() {
             height: Int
         ) {
             super.onSurfaceChanged(holder, format, width, height)
-            this.width = width
-            this.height = height
-            backgroundPaint.shader = createBackgroundShader(width, height)
+            runtime.updateViewport(width, height)
             drawFrame()
         }
 
+        /** 接收桌面滑屏偏移量，驱动视差效果。 */
         override fun onOffsetsChanged(
             xOffset: Float,
             yOffset: Float,
@@ -120,60 +87,44 @@ class DemoWallpaperService : WallpaperService() {
                 xPixelOffset,
                 yPixelOffset
             )
-            this.xOffset = xOffset
+            runtime.updateOffset(xOffset)
             drawFrame()
         }
 
+        /** 触摸时记录采样，用于生成波纹动画。 */
         override fun onTouchEvent(event: MotionEvent) {
             super.onTouchEvent(event)
             val action = event.actionMasked
             if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_MOVE) {
-                touchX = event.x
-                touchY = event.y
-                rippleStartMillis = SystemClock.uptimeMillis()
+                runtime.registerTouch(event.x, event.y, event.eventTime)
                 drawFrame()
             }
         }
 
+        /** Surface 销毁时停止刷新。 */
         override fun onSurfaceDestroyed(holder: SurfaceHolder) {
             super.onSurfaceDestroyed(holder)
             visible = false
             handler.removeCallbacks(drawRunner)
         }
 
+        /** 引擎销毁时清理回调。 */
         override fun onDestroy() {
             handler.removeCallbacks(drawRunner)
             super.onDestroy()
         }
 
-        override fun onComputeColors(): WallpaperColors? {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                WallpaperColors(
-                    Color.valueOf(Color.parseColor("#10203B")),
-                    Color.valueOf(Color.parseColor("#224870")),
-                    Color.valueOf(Color.parseColor("#F7C948"))
-                )
-            } else {
-                super.onComputeColors()
-            }
-        }
-
-        private fun createBackgroundShader(width: Int, height: Int): Shader {
-            return LinearGradient(
-                0f,
-                0f,
-                width.toFloat(),
-                height.toFloat(),
-                intArrayOf(
-                    Color.parseColor("#0B132B"),
-                    Color.parseColor("#1C2541"),
-                    Color.parseColor("#224870")
-                ),
-                null,
-                Shader.TileMode.CLAMP
+        /** 返回系统用于提取壁纸主色调的颜色样本。 */
+        @TargetApi(Build.VERSION_CODES.O_MR1)
+        override fun onComputeColors(): WallpaperColors {
+            return WallpaperColors(
+                Color.valueOf(Color.parseColor("#10203B")),
+                Color.valueOf(Color.parseColor("#224870")),
+                Color.valueOf(Color.parseColor("#F7C948"))
             )
         }
 
+        /** 尝试锁定 Surface 并绘制当前帧。 */
         private fun drawFrame() {
             val holder = surfaceHolder ?: return
             val surface = holder.surface ?: return
@@ -183,72 +134,12 @@ class DemoWallpaperService : WallpaperService() {
 
             var canvas: Canvas? = null
             try {
-                canvas = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    holder.lockHardwareCanvas()
-                } else {
-                    holder.lockCanvas()
-                }
-
-                if (canvas == null) {
-                    return
-                }
-
-                val now = SystemClock.uptimeMillis()
-                val pulse = ((sin(now / 450.0) + 1.0) * 0.5).toFloat()
-                val orbitY = height * 0.44f + sin(now / 1200.0).toFloat() * height * 0.03f
-                val orbitRadius = min(width, height) * (0.11f + pulse * 0.025f)
-                val orbitX = lerp(width * 0.18f, width * 0.82f, xOffset)
-
-                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), backgroundPaint)
-                canvas.drawCircle(width * 0.22f, height * 0.18f, width * 0.19f, hazePaint)
-                canvas.drawCircle(width * 0.78f, height * 0.76f, width * 0.25f, hazePaint)
-
-                bottomPanel.set(
-                    width * 0.06f,
-                    height * 0.68f,
-                    width * 0.94f,
-                    height * 0.92f
-                )
-                canvas.drawRoundRect(bottomPanel, 28f, 28f, panelPaint)
-
-                canvas.drawCircle(orbitX, orbitY, orbitRadius, orbPaint)
-                canvas.drawCircle(orbitX, orbitY, orbitRadius * 0.28f, orbCorePaint)
-
-                if (touchX >= 0f && touchY >= 0f && rippleStartMillis > 0L) {
-                    val rippleProgress =
-                        (SystemClock.uptimeMillis() - rippleStartMillis) / rippleDurationMs.toFloat()
-                    if (rippleProgress <= 1f) {
-                        ripplePaint.alpha = ((1f - rippleProgress) * 180).toInt()
-                        canvas.drawCircle(
-                            touchX,
-                            touchY,
-                            rippleProgress * min(width, height) * 0.18f,
-                            ripplePaint
-                        )
-                    }
-                }
-
-                val textLeft = width * 0.11f
-                canvas.drawText(
-                    "KLWP minimal live wallpaper demo",
-                    textLeft,
-                    height * 0.76f,
-                    textPaint
-                )
-
-                val timeText = DateFormat.format("HH:mm:ss", System.currentTimeMillis()).toString()
-                canvas.drawText("Time  $timeText", textLeft, height * 0.82f, detailPaint)
-                canvas.drawText(
-                    String.format(Locale.US, "Home offset  %.2f", xOffset),
-                    textLeft,
-                    height * 0.86f,
-                    detailPaint
-                )
-                canvas.drawText(
-                    "Swipe home pages and tap anywhere to test input.",
-                    textLeft,
-                    height * 0.90f,
-                    detailPaint
+                canvas = holder.lockHardwareCanvas()
+                val frameCanvas = canvas ?: return
+                runtime.render(
+                    canvas = frameCanvas,
+                    uptimeMillis = SystemClock.uptimeMillis(),
+                    wallClockMillis = System.currentTimeMillis()
                 )
             } catch (_: RuntimeException) {
                 // Surface could disappear between validation and lock.
@@ -261,10 +152,6 @@ class DemoWallpaperService : WallpaperService() {
                     }
                 }
             }
-        }
-
-        private fun lerp(start: Float, end: Float, amount: Float): Float {
-            return start + (end - start) * amount
         }
     }
 }

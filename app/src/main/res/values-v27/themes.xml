@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 编辑器页面使用浅色系统栏，并把窗口背景和设计稿背景保持一致。 -->
+    <!-- 仅在 API 27+ 上声明浅色导航栏，避免低版本 lint 误报。 -->
     <style name="Theme.KlwpDemo" parent="@android:style/Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@color/editor_bg</item>
         <item name="android:navigationBarColor">@color/editor_bg</item>
         <item name="android:windowBackground">@color/editor_bg</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>

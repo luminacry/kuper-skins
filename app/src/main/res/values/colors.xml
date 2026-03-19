@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 编辑器主界面的基础色板。 -->
+    <color name="editor_bg">#FFFFFF</color>
+    <color name="editor_text_primary">#171717</color>
+    <color name="editor_text_secondary">#8C8C8C</color>
+    <color name="editor_divider">#E2E2E2</color>
+    <color name="editor_fix_text">#E04A5A</color>
+    <color name="editor_chip_idle">#F4F1F1</color>
+    <color name="editor_sheet_bg">#FFFFFF</color>
+    <color name="editor_preview_top">#1C1C1C</color>
+    <color name="editor_preview_shell">#575757</color>
+    <color name="editor_layer_header">#3A3A3A</color>
+    <color name="editor_list_surface">#FFFFFF</color>
+    <color name="editor_text_on_dark">#FFFFFF</color>
+</resources>
