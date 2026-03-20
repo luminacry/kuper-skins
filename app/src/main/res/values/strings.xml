@@ -2,11 +2,11 @@
 <resources>
     <string name="app_name">KLWP 编辑器复刻</string>
     <string name="wallpaper_name">KLWP 演示壁纸</string>
-    <string name="wallpaper_description">用于编辑器预览与运行时场景联调的演示壁纸。</string>
+    <string name="wallpaper_description">用于编辑器预览与运行时联调的演示壁纸。</string>
 
     <string name="editor_menu">打开菜单</string>
     <string name="editor_save">保存</string>
-    <string name="editor_history">撤销</string>
+    <string name="editor_history">历史</string>
     <string name="editor_add">新增图层</string>
 
     <string name="editor_project_strip_top">项</string>
@@ -14,7 +14,7 @@
     <string name="editor_project_strip_bottom">夹</string>
 
     <string name="editor_tool_expand">适配画布</string>
-    <string name="editor_tool_focus">聚焦选择</string>
+    <string name="editor_tool_focus">聚焦选中</string>
     <string name="editor_tool_lock">锁定图层</string>
     <string name="editor_tool_layers">图层面板</string>
     <string name="editor_tool_adjust">调整属性</string>
@@ -23,10 +23,10 @@
     <string name="editor_tool_charts">数据统计</string>
     <string name="editor_tool_settings">编辑器设置</string>
 
-    <string name="editor_issue_missing_request">丢失请求: 设置为壁纸</string>
-    <string name="editor_fix_now">立即修复</string>
+    <string name="editor_issue_missing_request">当前项目尚未设置为壁纸</string>
+    <string name="editor_fix_now">立即处理</string>
 
-    <string name="editor_property_none">未选择图层</string>
+    <string name="editor_property_none">未选中可编辑图层</string>
     <string name="editor_property_close">关闭属性面板</string>
     <string name="editor_property_position_x">X 位置</string>
     <string name="editor_property_position_y">Y 位置</string>
@@ -34,23 +34,18 @@
     <string name="editor_property_scale">缩放</string>
     <string name="editor_property_fill">填充</string>
     <string name="editor_delete_layer">删除图层</string>
+    <string name="editor_property_group_only">请先在项目内选择具体图形或文本</string>
 
     <string name="editor_layers_subtitle_dynamic">项目 %1$d / %2$d</string>
 
-    <string name="editor_tab_layers">图层</string>
-    <string name="editor_tab_action">动作</string>
-    <string name="editor_tab_data">数据</string>
-    <string name="editor_tab_global">全局</string>
-    <string name="editor_tab_coming_soon">该标签页暂未开放</string>
+    <string name="editor_tab_project">项目</string>
+    <string name="editor_tab_layer">层</string>
+    <string name="editor_tab_position">位置</string>
+    <string name="editor_tab_global">全局变量</string>
+    <string name="editor_tab_animation">动画</string>
+    <string name="editor_tab_coming_soon">该页签这轮先不展开，我们先对齐项目页逻辑</string>
 
-    <string name="editor_layer_1_name">应用页</string>
-    <string name="editor_layer_1_desc">矩形, 矩形, 文本, 电量…</string>
-    <string name="editor_layer_2_name">应用页</string>
-    <string name="editor_layer_2_desc">圆形, 光晕, 焦点圆</string>
-    <string name="editor_layer_3_name">主屏壁纸</string>
-    <string name="editor_layer_3_desc">矩形, 文本, 雾层</string>
-
-    <string name="editor_add_shape_rectangle">添加矩形</string>
+    <string name="editor_add_shape_rectangle">添加方形</string>
     <string name="editor_add_shape_circle">添加圆形</string>
     <string name="editor_add_shape_failed">添加图形失败</string>
     <string name="editor_delete_shape_failed">删除图层失败</string>
@@ -62,4 +57,39 @@
     <string name="editor_fill_color_mint">设置薄荷色填充</string>
     <string name="editor_undo_empty">没有可撤销的操作</string>
     <string name="editor_redo_empty">没有可重做的操作</string>
+
+    <string name="editor_header_default_title">HH301</string>
+    <string name="editor_header_default_subtitle">主屏壁纸 · 编辑中</string>
+    <string name="editor_header_project_subtitle">项目 · 组件列表</string>
+    <string name="editor_header_component_subtitle">组件 · 子项列表</string>
+    <string name="editor_header_shape_subtitle">图层 · 属性调整</string>
+
+    <string name="editor_context_strip_line_1">组</string>
+    <string name="editor_context_strip_line_2">件</string>
+
+    <string name="editor_status_live_preview">实时预览</string>
+    <string name="editor_status_project_format">当前项目：%1$s</string>
+    <string name="editor_status_component_format">当前组件：%1$s</string>
+    <string name="editor_status_selected_item">已选中：%1$s</string>
+    <string name="editor_status_selected_shape">已选中：%1$s</string>
+    <string name="editor_status_back_parent">返回上级</string>
+    <string name="editor_status_component_tag">组件</string>
+    <string name="editor_status_project_tag">项目</string>
+
+    <string name="editor_shape_only">当前逻辑优先走项目与组件层级，请先进入具体子项</string>
+    <string name="editor_shape_object_default">当前对象 · 方形 01</string>
+    <string name="editor_shape_object_format">当前对象 · %1$s</string>
+    <string name="editor_shape_mode_label">图形</string>
+    <string name="editor_shape_tab_shape">图形</string>
+    <string name="editor_shape_tab_paint">涂装</string>
+    <string name="editor_shape_tab_layer">图层</string>
+    <string name="editor_shape_tab_position">位置</string>
+    <string name="editor_shape_tab_animation">动画</string>
+    <string name="editor_shape_field_kind">图形</string>
+    <string name="editor_shape_field_width">宽度</string>
+    <string name="editor_shape_field_radius">圆角</string>
+    <string name="editor_shape_field_rotation">旋转</string>
+    <string name="editor_shape_value_placeholder">--</string>
+    <string name="editor_shape_value_px">%1$d px</string>
+    <string name="editor_shape_value_degrees">%1$d°</string>
 </resources>

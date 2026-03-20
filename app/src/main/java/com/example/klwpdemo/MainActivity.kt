@@ -49,15 +49,16 @@ class MainActivity : Activity() {
     private lateinit var editorToolsRail: View
     private lateinit var editorPropertyPanel: View
 
-    /** 右侧属性面板与底部页签相关控件。 */
+    /** 右侧属性面板与底部项目页签相关控件。 */
     private lateinit var fillColorSection: View
     private lateinit var fillColorRoseButton: ImageButton
     private lateinit var fillColorBlueButton: ImageButton
     private lateinit var fillColorMintButton: ImageButton
-    private lateinit var layersTab: TextView
-    private lateinit var actionTab: TextView
-    private lateinit var dataTab: TextView
+    private lateinit var projectTab: TextView
+    private lateinit var layerTab: TextView
+    private lateinit var positionTab: TextView
     private lateinit var globalTab: TextView
+    private lateinit var animationTab: TextView
     private lateinit var selectedLayerNameText: TextView
     private lateinit var positionXValueText: TextView
     private lateinit var positionYValueText: TextView
@@ -69,9 +70,20 @@ class MainActivity : Activity() {
     private lateinit var seekScale: SeekBar
     private lateinit var editorRootContent: View
     private var editorBaseTopPadding = 0
+    private lateinit var headerTitleText: TextView
+    private lateinit var headerSubtitleText: TextView
+    private lateinit var projectStripBackground: ImageView
+    private lateinit var contextStripOverlay: View
+    private lateinit var contextStripIcon: ImageView
+    private lateinit var contextStripLine1Text: TextView
+    private lateinit var contextStripLine2Text: TextView
+    private lateinit var issuePrimaryText: TextView
+    private lateinit var issueActionText: TextView
+    private lateinit var editorLayerPanel: View
 
-    /** 当前编辑上下文围绕选中图层与编辑状态变化。 */
+    /** 当前编辑上下文围绕选中图层、当前容器与编辑状态变化。 */
     private var selectedLayerId: String? = null
+    private var currentContainerId: String? = null
     private var suppressSeekCallbacks = false
     private var suppressPreviewSelectionCallback = false
     private var latestLayerItems: List<LayerUiItem> = emptyList()
@@ -103,10 +115,11 @@ class MainActivity : Activity() {
         fillColorRoseButton = findViewById(R.id.button_fill_color_rose)
         fillColorBlueButton = findViewById(R.id.button_fill_color_blue)
         fillColorMintButton = findViewById(R.id.button_fill_color_mint)
-        layersTab = findViewById(R.id.tab_layers)
-        actionTab = findViewById(R.id.tab_action)
-        dataTab = findViewById(R.id.tab_data)
+        projectTab = findViewById(R.id.tab_project)
+        layerTab = findViewById(R.id.tab_layer)
+        positionTab = findViewById(R.id.tab_position)
         globalTab = findViewById(R.id.tab_global)
+        animationTab = findViewById(R.id.tab_animation)
         selectedLayerNameText = findViewById(R.id.text_selected_layer_name)
         positionXValueText = findViewById(R.id.text_position_x_value)
         positionYValueText = findViewById(R.id.text_position_y_value)
@@ -118,6 +131,16 @@ class MainActivity : Activity() {
         seekScale = findViewById(R.id.seek_scale)
         editorRootContent = findViewById(R.id.editor_root_content)
         editorBaseTopPadding = editorRootContent.paddingTop
+        headerTitleText = findViewById(R.id.text_header_title)
+        headerSubtitleText = findViewById(R.id.text_header_subtitle)
+        projectStripBackground = findViewById(R.id.image_project_strip_background)
+        contextStripOverlay = findViewById(R.id.layout_context_strip_overlay)
+        contextStripIcon = findViewById(R.id.image_context_strip_icon)
+        contextStripLine1Text = findViewById(R.id.text_context_strip_line_1)
+        contextStripLine2Text = findViewById(R.id.text_context_strip_line_2)
+        issuePrimaryText = findViewById(R.id.text_issue_primary)
+        issueActionText = findViewById(R.id.text_issue_action)
+        editorLayerPanel = findViewById(R.id.editor_layer_panel)
 
         applyStatusBarInsetPadding()
 
@@ -134,12 +157,20 @@ class MainActivity : Activity() {
         deletePropertyButton.setOnClickListener { deleteSelectedLayer() }
         toolAdjustButton.setOnClickListener { openPropertyPanelForSelection() }
         toolLayerButton.setOnClickListener { closePropertyPanel() }
-        layersTab.setOnClickListener { closePropertyPanel() }
-        actionTab.setOnClickListener { openPropertyPanelForSelection() }
-        dataTab.setOnClickListener {
+        projectStripBackground.setOnClickListener { navigateToParentContainer() }
+        contextStripOverlay.setOnClickListener { navigateToParentContainer() }
+        issueActionText.setOnClickListener { navigateToParentContainer() }
+        projectTab.setOnClickListener { closePropertyPanel() }
+        layerTab.setOnClickListener {
+            Toast.makeText(this, R.string.editor_tab_coming_soon, Toast.LENGTH_SHORT).show()
+        }
+        positionTab.setOnClickListener {
             Toast.makeText(this, R.string.editor_tab_coming_soon, Toast.LENGTH_SHORT).show()
         }
         globalTab.setOnClickListener {
+            Toast.makeText(this, R.string.editor_tab_coming_soon, Toast.LENGTH_SHORT).show()
+        }
+        animationTab.setOnClickListener {
             Toast.makeText(this, R.string.editor_tab_coming_soon, Toast.LENGTH_SHORT).show()
         }
 
@@ -168,47 +199,59 @@ class MainActivity : Activity() {
     private fun bindLayerList(document: WallpaperDocument) {
         val flattened = flattenLayers(document.layers)
         latestLayerItems = flattened
+        val defaultProjectId = flattened.firstOrNull { it.containerRole == ContainerRole.PROJECT }?.id
 
-        if (!hasAutoSelectedLayer && flattened.isNotEmpty()) {
-            val defaultSelection = flattened.firstOrNull { it.id == DEFAULT_SELECTED_LAYER_ID }
-                ?: flattened.firstOrNull { it.isShapeLayer }
-            if (defaultSelection != null) {
-                hasAutoSelectedLayer = true
-                selectedLayerId = defaultSelection.id
-                syncPreviewSelection(defaultSelection.id)
-            }
+        if (selectedLayerId != null && flattened.none { it.id == selectedLayerId }) {
+            selectedLayerId = null
+        }
+        if (currentContainerId != null && flattened.none { it.id == currentContainerId }) {
+            currentContainerId = null
+        }
+
+        if (!hasAutoSelectedLayer && defaultProjectId != null) {
+            hasAutoSelectedLayer = true
+            currentContainerId = defaultProjectId
+            selectedLayerId = null
+            syncPreviewSelection(null)
+            applyEditorUiState(EditorUiState.IDLE)
+        } else if (selectedLayerId != null) {
+            currentContainerId = resolveContainerIdForSelection(selectedLayerId!!)
+                ?: currentContainerId
+                ?: defaultProjectId
+        } else if (currentContainerId == null) {
+            currentContainerId = defaultProjectId
         }
 
         updateHistoryButtons()
 
         // 用轻量签名判断图层数据是否真正变化，避免重复重建整个列表。
         val signature = flattened.joinToString(separator = "|") { layer ->
-            "${layer.id}:${layer.depth}:${layer.visible}:${layer.transform.translationX}:" +
+            "${layer.id}:${layer.parentId}:${layer.depth}:${layer.visible}:${layer.transform.translationX}:" +
                 "${layer.transform.translationY}:${layer.transform.scaleX}:${layer.transform.scaleY}:" +
-                "${layer.transform.alpha}:${layer.description}"
+                "${layer.transform.rotationDegrees}:${layer.transform.alpha}:${layer.description}:" +
+                "${layer.shapeKindLabel}:${layer.shapeWidthPx}:${layer.shapeCornerRadiusPx}:" +
+                "${layer.containerRole}:${layer.isContainer}"
         }
 
-        val visibleCount = flattened.count { it.visible }
+        val visibleItems = visibleItemsForCurrentContainer()
+        val visibleCount = visibleItems.count { it.visible }
         layerCountText.text = getString(
             R.string.editor_layers_subtitle_dynamic,
             visibleCount,
-            flattened.size
+            visibleItems.size
         )
 
         if (signature != latestLayerSignature) {
             latestLayerSignature = signature
-            renderLayerRows(flattened)
-            if (selectedLayerId != null && editorUiState == EditorUiState.EDITING) {
-                syncPropertyPanelFromSelection()
-            }
-        } else if (selectedLayerId != null && editorUiState == EditorUiState.EDITING) {
-            syncPropertyPanelFromSelection()
+            renderLayerRows(visibleItems)
         }
+        syncVisibleEditorState()
     }
 
     /** 根据拍平后的图层数据渲染底部列表，并维护选中和显隐状态。 */
     private fun renderLayerRows(items: List<LayerUiItem>) {
         layerListContainer.removeAllViews()
+        val currentDepth = currentContainerItem()?.depth ?: -1
 
         items.forEachIndexed { index, item ->
             val row = rowInflater.inflate(
@@ -225,7 +268,8 @@ class MainActivity : Activity() {
             val layerVisibleImage = row.findViewById<ImageView>(R.id.image_layer_visible)
 
             val textLayoutParams = textContainer.layoutParams as LinearLayout.LayoutParams
-            textLayoutParams.marginStart = dp(8 + item.depth * 12)
+            val relativeDepth = (item.depth - currentDepth - 1).coerceAtLeast(0)
+            textLayoutParams.marginStart = dp(8 + relativeDepth * 12)
             textContainer.layoutParams = textLayoutParams
 
             layerNameText.text = item.displayName
@@ -247,7 +291,7 @@ class MainActivity : Activity() {
             }
 
             rowRoot.setOnClickListener {
-                selectLayer(item.id)
+                onLayerRowClicked(item)
             }
             layerVisibleImage.setOnClickListener {
                 setLayerVisibility(item.id, !item.visible)
@@ -357,38 +401,44 @@ class MainActivity : Activity() {
         if (layerId == null) {
             selectedLayerId = null
             applyEditorUiState(EditorUiState.IDLE)
-            renderLayerRows(latestLayerItems)
+            renderLayerRows(visibleItemsForCurrentContainer())
             return
         }
         selectedLayerId = layerId
-        if (editorUiState == EditorUiState.EDITING) {
-            syncPropertyPanelFromSelection()
-        } else {
-            applyEditorUiState(EditorUiState.SELECTED)
-        }
-        renderLayerRows(latestLayerItems)
+        currentContainerId = resolveContainerIdForSelection(layerId) ?: currentContainerId
+        applyPreferredStateForCurrentSelection()
+        renderLayerRows(visibleItemsForCurrentContainer())
     }
 
-    /** 处理底部列表点击选中。 */
-    private fun selectLayer(layerId: String) {
-        selectedLayerId = layerId
-        syncPreviewSelection(layerId)
-        if (editorUiState == EditorUiState.EDITING) {
-            syncPropertyPanelFromSelection()
+    /** 项目页列表点击时，容器进入下一层，叶子节点则直接选中。 */
+    private fun onLayerRowClicked(item: LayerUiItem) {
+        if (item.isContainer) {
+            currentContainerId = item.id
+            selectedLayerId = null
+            syncPreviewSelection(null)
+            applyEditorUiState(EditorUiState.IDLE)
         } else {
-            applyEditorUiState(EditorUiState.SELECTED)
+            selectedLayerId = item.id
+            currentContainerId = item.parentId ?: currentContainerId
+            syncPreviewSelection(item.id)
+            applyPreferredStateForCurrentSelection()
         }
-        renderLayerRows(latestLayerItems)
+        renderLayerRows(visibleItemsForCurrentContainer())
     }
 
-    /** 仅在存在选中图层时打开属性面板。 */
+    /** 仅在存在具体图层选中时打开属性面板。 */
     private fun openPropertyPanelForSelection() {
-        if (selectedLayerId == null) {
+        val selectedItem = currentSelectedItem()
+        if (selectedItem == null) {
             Toast.makeText(this, R.string.editor_property_none, Toast.LENGTH_SHORT).show()
             return
         }
+        if (selectedItem.isContainer) {
+            Toast.makeText(this, R.string.editor_property_group_only, Toast.LENGTH_SHORT).show()
+            return
+        }
         applyEditorUiState(EditorUiState.EDITING)
-        syncPropertyPanelFromSelection()
+        syncVisibleEditorState()
     }
 
     /** 关闭属性面板后，根据选中状态切回合适的编辑态。 */
@@ -398,7 +448,122 @@ class MainActivity : Activity() {
         } else {
             applyEditorUiState(EditorUiState.SELECTED)
         }
-        renderLayerRows(latestLayerItems)
+        renderLayerRows(visibleItemsForCurrentContainer())
+    }
+
+    /** 统一获取当前选中的图层展示模型，避免多处重复查找。 */
+    private fun currentSelectedItem(): LayerUiItem? {
+        val selectedId = selectedLayerId ?: return null
+        return latestLayerItems.find { it.id == selectedId }
+    }
+
+    /** 当前首屏只区分是否选中了具体子项，不再自动跳进图形参数页。 */
+    private fun applyPreferredStateForCurrentSelection() {
+        val selectedItem = currentSelectedItem()
+        applyEditorUiState(if (selectedItem == null) EditorUiState.IDLE else EditorUiState.SELECTED)
+        syncVisibleEditorState()
+    }
+
+    /** 根据当前容器和选中项刷新页眉、左侧条与状态栏文案。 */
+    private fun syncVisibleEditorState() {
+        val selectedItem = currentSelectedItem()
+        val container = currentContainerItem()
+
+        when (container?.containerRole) {
+            ContainerRole.PROJECT -> updateProjectChrome(container, selectedItem)
+            ContainerRole.COMPONENT -> updateComponentChrome(container, selectedItem)
+            else -> resetFocusedChrome()
+        }
+
+        if (editorUiState == EditorUiState.EDITING && selectedItem != null && !selectedItem.isContainer) {
+            syncPropertyPanelFromSelection()
+        }
+    }
+
+    /** 项目层使用默认的项目夹条，状态栏主文案指向当前项目。 */
+    private fun updateProjectChrome(
+        container: LayerUiItem,
+        selectedItem: LayerUiItem?
+    ) {
+        headerTitleText.text = container.displayName
+        headerSubtitleText.text = getString(R.string.editor_header_project_subtitle)
+        projectStripBackground.visibility = View.VISIBLE
+        contextStripOverlay.visibility = View.GONE
+        issuePrimaryText.text = selectedItem?.let {
+            getString(R.string.editor_status_selected_item, it.displayName)
+        } ?: getString(R.string.editor_status_project_format, container.displayName)
+        issueActionText.text = getString(R.string.editor_status_project_tag)
+    }
+
+    /** 组件层改用左侧组件条，并允许从状态栏返回上一级项目。 */
+    private fun updateComponentChrome(
+        container: LayerUiItem,
+        selectedItem: LayerUiItem?
+    ) {
+        headerTitleText.text = container.displayName
+        headerSubtitleText.text = getString(R.string.editor_header_component_subtitle)
+        projectStripBackground.visibility = View.GONE
+        contextStripOverlay.visibility = View.VISIBLE
+        contextStripIcon.setImageResource(R.drawable.ic_pencil_editor_folder)
+        contextStripLine1Text.text = getString(R.string.editor_context_strip_line_1)
+        contextStripLine2Text.text = getString(R.string.editor_context_strip_line_2)
+        issuePrimaryText.text = selectedItem?.let {
+            getString(R.string.editor_status_selected_item, it.displayName)
+        } ?: getString(R.string.editor_status_component_format, container.displayName)
+        issueActionText.text = getString(R.string.editor_status_back_parent)
+    }
+
+    /** 无容器上下文时回到默认编辑器标题。 */
+    private fun resetFocusedChrome() {
+        headerTitleText.text = getString(R.string.editor_header_default_title)
+        headerSubtitleText.text = getString(R.string.editor_header_default_subtitle)
+        projectStripBackground.visibility = View.VISIBLE
+        contextStripOverlay.visibility = View.GONE
+        issuePrimaryText.text = getString(R.string.editor_issue_missing_request)
+        issueActionText.text = getString(R.string.editor_fix_now)
+    }
+
+    /** 当前容器优先显示它的直接子项，保持项目页逻辑稳定。 */
+    private fun visibleItemsForCurrentContainer(): List<LayerUiItem> {
+        val containerId = currentContainerId ?: return emptyList()
+        return latestLayerItems.filter { it.parentId == containerId }
+    }
+
+    /** 取当前列表所处的容器。 */
+    private fun currentContainerItem(): LayerUiItem? {
+        val containerId = currentContainerId ?: return null
+        return latestLayerItems.find { it.id == containerId }
+    }
+
+    /** 叶子节点回到父容器，容器节点则显示自己的子项。 */
+    private fun resolveContainerIdForSelection(layerId: String): String? {
+        val item = latestLayerItems.find { it.id == layerId } ?: return null
+        return if (item.isContainer) item.id else item.parentId
+    }
+
+    /** 返回上一级容器，便于在项目和组件之间切换。 */
+    private fun navigateToParentContainer() {
+        val currentContainer = currentContainerItem() ?: return
+        val parentId = currentContainer.parentId ?: return
+        currentContainerId = parentId
+        selectedLayerId = null
+        syncPreviewSelection(null)
+        applyEditorUiState(EditorUiState.IDLE)
+        renderLayerRows(visibleItemsForCurrentContainer())
+        syncVisibleEditorState()
+    }
+
+    /** 新增图形默认落到当前组件内；如果还停留在项目层，就取第一个组件承接。 */
+    private fun resolveShapeInsertionParentId(): String? {
+        val currentContainer = currentContainerItem()
+        return when (currentContainer?.containerRole) {
+            ContainerRole.COMPONENT -> currentContainer.id
+            ContainerRole.PROJECT -> latestLayerItems.firstOrNull {
+                it.parentId == currentContainer.id && it.containerRole == ContainerRole.COMPONENT
+            }?.id
+
+            null -> currentContainerId
+        }
     }
 
     /** 主列表与预览区双向同步时，需要临时抑制回调避免循环。 */
@@ -526,11 +691,15 @@ class MainActivity : Activity() {
     }
 
     private fun addShape(kind: ShapeKind): Boolean {
-        val layerId = runtimePreview.addShape(kind) ?: run {
+        val parentLayerId = resolveShapeInsertionParentId()
+        val layerId = runtimePreview.addShape(kind, parentLayerId) ?: run {
             Toast.makeText(this, R.string.editor_add_shape_failed, Toast.LENGTH_SHORT).show()
             return false
         }
-        selectLayer(layerId)
+        selectedLayerId = layerId
+        currentContainerId = resolveContainerIdForSelection(layerId) ?: parentLayerId
+        applyPreferredStateForCurrentSelection()
+        renderLayerRows(visibleItemsForCurrentContainer())
         return true
     }
 
@@ -587,16 +756,17 @@ class MainActivity : Activity() {
         redoButton.alpha = 1f
     }
 
-    /** 根据是否正在编辑属性，切换底部页签、右侧属性面板和工具栏。 */
+    /** 根据是否正在编辑属性，切换右侧属性面板并保持项目页为默认页签。 */
     private fun applyEditorUiState(state: EditorUiState) {
         editorUiState = state
-        val editing = state == EditorUiState.EDITING
-        editorToolsRail.visibility = if (editing) View.GONE else View.VISIBLE
-        editorPropertyPanel.visibility = if (editing) View.VISIBLE else View.GONE
-        applyTabVisualState(layersTab, active = !editing)
-        applyTabVisualState(actionTab, active = editing)
-        applyTabVisualState(dataTab, active = false)
+        editorToolsRail.visibility = View.VISIBLE
+        editorPropertyPanel.visibility = if (state == EditorUiState.EDITING) View.VISIBLE else View.GONE
+        editorLayerPanel.visibility = View.VISIBLE
+        applyTabVisualState(projectTab, active = true)
+        applyTabVisualState(layerTab, active = false)
+        applyTabVisualState(positionTab, active = false)
         applyTabVisualState(globalTab, active = false)
+        applyTabVisualState(animationTab, active = false)
     }
 
     /** 底部四个页签只需要视觉区分，不涉及真实页面切换。 */
@@ -617,15 +787,16 @@ class MainActivity : Activity() {
 
     /** 只有在属性面板展开时才需要回刷右侧控件。 */
     private fun syncPropertyPanelIfNeeded() {
-        if (selectedLayerId != null && editorUiState == EditorUiState.EDITING) {
+        if (editorUiState == EditorUiState.EDITING) {
             syncPropertyPanelFromSelection()
         }
+        syncVisibleEditorState()
     }
 
     /** 把树状图层拍平成列表，方便底部清单逐行渲染。 */
     private fun flattenLayers(layers: List<LayerDocument>): List<LayerUiItem> {
         val result = mutableListOf<LayerUiItem>()
-        flattenInto(layers, depth = 0, destination = result)
+        flattenInto(layers, depth = 0, parentId = null, destination = result)
         return result
     }
 
@@ -633,59 +804,70 @@ class MainActivity : Activity() {
     private fun flattenInto(
         layers: List<LayerDocument>,
         depth: Int,
+        parentId: String?,
         destination: MutableList<LayerUiItem>
     ) {
         layers.forEach { layer ->
-            destination += layer.toLayerUiItem(depth)
+            destination += layer.toLayerUiItem(depth = depth, parentId = parentId)
             if (layer is GroupLayerDocument) {
-                flattenInto(layer.children, depth + 1, destination)
+                flattenInto(
+                    layers = layer.children,
+                    depth = depth + 1,
+                    parentId = layer.id,
+                    destination = destination
+                )
             }
         }
     }
 
     /** 把运行时图层转换成底部列表需要的展示模型。 */
-    private fun LayerDocument.toLayerUiItem(depth: Int): LayerUiItem {
+    private fun LayerDocument.toLayerUiItem(
+        depth: Int,
+        parentId: String?
+    ): LayerUiItem {
+        val shapeLayer = this as? ShapeLayerDocument
+        val averageScale = ((transform.scaleX + transform.scaleY) * 0.5f).coerceAtLeast(0.2f)
+        val containerRole = when {
+            this !is GroupLayerDocument -> null
+            parentId == null -> ContainerRole.PROJECT
+            else -> ContainerRole.COMPONENT
+        }
         return LayerUiItem(
             id = id,
+            parentId = parentId,
             displayName = localizedLayerDisplayName(id),
-            description = describeLayer(this),
+            description = describeLayer(
+                layer = this,
+                containerRole = containerRole
+            ),
             depth = depth,
             visible = visible,
             transform = transform,
-            isShapeLayer = this is ShapeLayerDocument,
-            typeIconRes = resolveTypeIcon(this)
+            isContainer = this is GroupLayerDocument,
+            containerRole = containerRole,
+            isShapeLayer = shapeLayer != null,
+            typeIconRes = resolveTypeIcon(this),
+            shapeKindLabel = shapeLayer?.shapeKind?.let(::localizedShapeKind),
+            shapeWidthPx = shapeLayer?.let { (it.bounds.width * transform.scaleX).roundToInt() },
+            shapeCornerRadiusPx = shapeLayer?.let { (it.style.cornerRadius * averageScale).roundToInt() },
+            shapeRotationDegrees = transform.rotationDegrees.roundToInt()
         )
     }
 
     /** 为底部列表生成简短描述。 */
-    private fun describeLayer(layer: LayerDocument): String {
+    private fun describeLayer(
+        layer: LayerDocument,
+        containerRole: ContainerRole?
+    ): String {
         return when (layer) {
-            is GroupLayerDocument -> {
-                val summary = layer.children
-                    .take(4)
-                    .joinToString(separator = ", ") { child -> layerKindLabel(child) }
-                if (layer.children.size > 4) "$summary…" else summary
+            is GroupLayerDocument -> when (containerRole) {
+                ContainerRole.PROJECT -> "项目"
+                ContainerRole.COMPONENT -> "组件"
+                null -> "组件"
             }
 
             is ShapeLayerDocument -> when (layer.shapeKind) {
-                ShapeKind.RECTANGLE -> "矩形"
-                ShapeKind.CIRCLE -> "圆形"
-            }
-
-            is ImageLayerDocument -> "图片"
-            is TextLayerDocument -> {
-                val compactText = layer.text.replace('\n', ' ').replace(Regex("\\s+"), " ").trim()
-                if (compactText.length > 12) compactText.take(12) + "…" else compactText
-            }
-        }
-    }
-
-    /** 把子图层类型翻译成短标签，供组合层摘要复用。 */
-    private fun layerKindLabel(layer: LayerDocument): String {
-        return when (layer) {
-            is GroupLayerDocument -> "编组"
-            is ShapeLayerDocument -> when (layer.shapeKind) {
-                ShapeKind.RECTANGLE -> "矩形"
+                ShapeKind.RECTANGLE -> "方形"
                 ShapeKind.CIRCLE -> "圆形"
             }
 
@@ -708,6 +890,14 @@ class MainActivity : Activity() {
     }
 
     /** 对运行时图层 id 做本地化展示。 */
+    /** 把形状类型同步成首屏成品稿里的中文语义。 */
+    private fun localizedShapeKind(shapeKind: ShapeKind): String {
+        return when (shapeKind) {
+            ShapeKind.RECTANGLE -> "方形"
+            ShapeKind.CIRCLE -> "圆形"
+        }
+    }
+
     private fun localizedLayerDisplayName(id: String): String {
         localizedLayerNameOverrides[id]?.let { return it }
 
@@ -734,7 +924,7 @@ class MainActivity : Activity() {
     private fun translateLayerToken(token: String): String {
         return when (token) {
             "user" -> "自定义"
-            "rect" -> "矩形"
+            "rect" -> "方形"
             "circle" -> "圆形"
             "left" -> "左侧"
             "right" -> "右侧"
@@ -744,13 +934,19 @@ class MainActivity : Activity() {
             "orb" -> "光球"
             "glow" -> "光晕"
             "core" -> "核心"
-            "cluster" -> "编组"
+            "cluster" -> "组件"
             "info" -> "信息"
             "panel" -> "面板"
             "title" -> "标题"
             "clock" -> "时间"
             "touch" -> "触摸"
             "ripple" -> "涟漪"
+            "project" -> "项目"
+            "component" -> "组件"
+            "main" -> "主"
+            "visual" -> "视觉"
+            "wallpaper" -> "壁纸"
+            "atmosphere" -> "氛围"
             else -> token
         }
     }
@@ -804,14 +1000,27 @@ class MainActivity : Activity() {
     /** 底部列表渲染时使用的轻量展示模型。 */
     private data class LayerUiItem(
         val id: String,
+        val parentId: String?,
         val displayName: String,
         val description: String,
         val depth: Int,
         val visible: Boolean,
         val transform: LayerTransformDocument,
+        val isContainer: Boolean,
+        val containerRole: ContainerRole?,
         val isShapeLayer: Boolean,
-        val typeIconRes: Int
+        val typeIconRes: Int,
+        val shapeKindLabel: String? = null,
+        val shapeWidthPx: Int? = null,
+        val shapeCornerRadiusPx: Int? = null,
+        val shapeRotationDegrees: Int = 0
     )
+
+    /** 这里只区分顶层项目和项目内组件。 */
+    private enum class ContainerRole {
+        PROJECT,
+        COMPONENT
+    }
 
     /** 编辑器只区分三种视图状态。 */
     private enum class EditorUiState {
@@ -824,17 +1033,21 @@ class MainActivity : Activity() {
     private companion object {
         const val MENU_ADD_RECTANGLE = 1001
         const val MENU_ADD_CIRCLE = 1002
-        const val DEFAULT_SELECTED_LAYER_ID = "outline-card"
 
         val localizedLayerNameOverrides = mapOf(
-            "left-haze" to "应用页",
-            "outline-card" to "应用页",
-            "orb-cluster" to "应用页",
+            "project-hh301" to "HH301",
+            "project-main-wallpaper" to "主屏壁纸",
+            "component-main-visual" to "主视觉",
+            "component-info-panel" to "信息面板",
+            "component-atmosphere" to "背景氛围",
+            "left-haze" to "左侧雾层",
+            "outline-card" to "轮廓卡片",
+            "orb-cluster" to "光球组件",
             "orb-glow" to "光球光晕",
             "orb-main" to "焦点圆",
             "orb-core" to "中心点",
-            "right-haze" to "主屏壁纸",
-            "info-panel" to "主屏壁纸",
+            "right-haze" to "右侧雾层",
+            "info-panel" to "信息面板",
             "info-panel-bg" to "面板背景",
             "info-title" to "标题文本",
             "info-clock" to "时间文本",

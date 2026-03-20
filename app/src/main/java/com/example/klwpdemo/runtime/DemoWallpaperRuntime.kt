@@ -119,7 +119,10 @@ class DemoWallpaperRuntime(
     }
 
     /** 编辑模式下新增一个默认形状图层。 */
-    fun addShape(shapeKind: ShapeKind): String? {
+    fun addShape(
+        shapeKind: ShapeKind,
+        parentLayerId: String? = null
+    ): String? {
         if (!editorMode || !viewport.isReady) {
             return null
         }
@@ -135,7 +138,12 @@ class DemoWallpaperRuntime(
             shapeKind = shapeKind,
             shapeIndex = shapeCount
         )
-        val next = documentRepository.execute(AddShapeCommand(shape)) ?: return null
+        val next = documentRepository.execute(
+            AddShapeCommand(
+                shape = shape,
+                parentLayerId = parentLayerId
+            )
+        ) ?: return null
         latestDocumentSnapshot = next
         return layerId
     }

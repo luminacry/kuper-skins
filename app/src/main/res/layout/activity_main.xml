@@ -16,7 +16,7 @@
         <!-- 顶部菜单栏：保留状态栏留白，但不直接展示系统状态内容。 -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="46dp"
             android:background="@color/editor_bg"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -31,10 +31,32 @@
                 android:scaleType="center"
                 android:src="@drawable/ic_header_menu_vector" />
 
-            <Space
+            <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:paddingStart="8dp">
+
+                <TextView
+                    android:id="@+id/text_header_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/editor_header_default_title"
+                    android:textColor="@color/editor_text_primary"
+                    android:textSize="17sp" />
+
+                <TextView
+                    android:id="@+id/text_header_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
+                    android:text="@string/editor_header_default_subtitle"
+                    android:textColor="@color/editor_text_secondary"
+                    android:textSize="10sp" />
+            </LinearLayout>
 
             <ImageButton
                 android:id="@+id/button_editor_redo"
@@ -81,6 +103,7 @@
                 android:layout_height="match_parent">
 
                 <ImageView
+                    android:id="@+id/image_project_strip_background"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:contentDescription="@null"
@@ -88,45 +111,40 @@
                     android:src="@drawable/bg_pencil_project_strip_full" />
 
                 <LinearLayout
+                    android:id="@+id/layout_context_strip_overlay"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:alpha="0"
                     android:gravity="center_horizontal"
                     android:orientation="vertical"
-                    android:paddingTop="24dp">
+                    android:paddingTop="22dp"
+                    android:visibility="gone">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:id="@+id/image_context_strip_icon"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
                         android:contentDescription="@null"
-                        android:src="@drawable/ic_pencil_editor_folder" />
+                        android:src="@drawable/ic_pencil_editor_type_rect" />
 
                     <TextView
+                        android:id="@+id/text_context_strip_line_1"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:fontFamily="sans-serif-medium"
-                        android:text="@string/editor_project_strip_top"
+                        android:text="@string/editor_context_strip_line_1"
                         android:textColor="@color/editor_text_on_dark"
-                        android:textSize="11sp" />
+                        android:textSize="10sp" />
 
                     <TextView
+                        android:id="@+id/text_context_strip_line_2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="8dp"
                         android:fontFamily="sans-serif-medium"
-                        android:text="@string/editor_project_strip_middle"
+                        android:text="@string/editor_context_strip_line_2"
                         android:textColor="@color/editor_text_on_dark"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:fontFamily="sans-serif-medium"
-                        android:text="@string/editor_project_strip_bottom"
-                        android:textColor="@color/editor_text_on_dark"
-                        android:textSize="11sp" />
+                        android:textSize="10sp" />
                 </LinearLayout>
             </FrameLayout>
 
@@ -269,21 +287,23 @@
             android:paddingEnd="16dp">
 
             <TextView
+                android:id="@+id/text_issue_primary"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:fontFamily="sans-serif-medium"
                 android:text="@string/editor_issue_missing_request"
                 android:textColor="@color/editor_text_on_dark"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
 
             <TextView
+                android:id="@+id/text_issue_action"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
                 android:text="@string/editor_fix_now"
                 android:textColor="@color/editor_fix_text"
-                android:textSize="14sp" />
+                android:textSize="13sp" />
         </LinearLayout>
 
         <!-- 图层统计文本只作为逻辑载体，不直接显示在界面上。 -->
@@ -293,58 +313,58 @@
             android:layout_height="0dp"
             android:visibility="gone" />
 
-        <!-- 底部区域：上方页签，下方图层列表。 -->
-        <LinearLayout
+        <!-- 底部区域：项目页签和当前容器的内容列表。 -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="316dp"
-            android:background="@color/editor_list_surface"
-            android:orientation="vertical">
+            android:background="@color/editor_list_surface">
 
             <LinearLayout
+                android:id="@+id/editor_layer_panel"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="49dp"
+                    android:layout_height="46dp"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:id="@+id/tab_layers"
+                        android:id="@+id/tab_project"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:background="@drawable/bg_editor_tab_active"
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
-                        android:text="@string/editor_tab_layers"
+                        android:text="@string/editor_tab_project"
                         android:textColor="@color/editor_text_primary"
-                        android:textSize="12sp" />
+                        android:textSize="11sp" />
 
                     <TextView
-                        android:id="@+id/tab_action"
+                        android:id="@+id/tab_layer"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:background="@drawable/bg_editor_tab_idle"
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
-                        android:text="@string/editor_tab_action"
+                        android:text="@string/editor_tab_layer"
                         android:textColor="@color/editor_text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="11sp" />
 
                     <TextView
-                        android:id="@+id/tab_data"
+                        android:id="@+id/tab_position"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:background="@drawable/bg_editor_tab_idle"
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center"
-                        android:text="@string/editor_tab_data"
+                        android:text="@string/editor_tab_position"
                         android:textColor="@color/editor_text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="11sp" />
 
                     <TextView
                         android:id="@+id/tab_global"
@@ -356,13 +376,25 @@
                         android:gravity="center"
                         android:text="@string/editor_tab_global"
                         android:textColor="@color/editor_text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/tab_animation"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_editor_tab_idle"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="@string/editor_tab_animation"
+                        android:textColor="@color/editor_text_secondary"
+                        android:textSize="11sp" />
                 </LinearLayout>
 
                 <ScrollView
                     android:id="@+id/layer_list_scroll"
                     android:layout_width="match_parent"
-                    android:layout_height="267dp"
+                    android:layout_height="270dp"
                     android:background="@drawable/bg_editor_layer_list_surface"
                     android:clipToPadding="false"
                     android:fillViewport="true"
@@ -379,7 +411,7 @@
                         android:orientation="vertical" />
                 </ScrollView>
             </LinearLayout>
-        </LinearLayout>
+        </FrameLayout>
     </LinearLayout>
 
     <!-- 右侧属性浮层：只有进入编辑态时才覆盖显示。 -->

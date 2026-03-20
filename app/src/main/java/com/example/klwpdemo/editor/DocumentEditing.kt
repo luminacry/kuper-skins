@@ -20,11 +20,14 @@ interface DocumentCommand {
 
 /** 新增一个形状图层。 */
 data class AddShapeCommand(
-    private val shape: ShapeLayerDocument
+    private val shape: ShapeLayerDocument,
+    private val parentLayerId: String? = null
 ) : DocumentCommand {
     override fun apply(document: WallpaperDocument): WallpaperDocument {
-        return document.copy(
-            layers = document.layers + shape
+        return DocumentLayerOps.addLayer(
+            document = document,
+            parentLayerId = parentLayerId,
+            layer = shape
         )
     }
 }
@@ -205,6 +208,28 @@ class DocumentRepository(
 
 /** 图层树上的常用查找、更新和删除工具函数。 */
 object DocumentLayerOps {
+    /** 在顶层或指定分组下插入一个新图层。 */
+    fun addLayer(
+        document: WallpaperDocument,
+        parentLayerId: String?,
+        layer: LayerDocument
+    ): WallpaperDocument {
+        if (parentLayerId == null) {
+            return document.copy(layers = document.layers + layer)
+        }
+
+        val (updatedLayers, changed) = addLayerIntoList(
+            layers = document.layers,
+            parentLayerId = parentLayerId,
+            layer = layer
+        )
+        return if (changed) {
+            document.copy(layers = updatedLayers)
+        } else {
+            document
+        }
+    }
+
     /** 判断目标图层是否存在。 */
     fun hasLayer(
         document: WallpaperDocument,
@@ -339,5 +364,41 @@ object DocumentLayerOps {
             }
         }
         return kept to deleted
+    }
+
+    /** 递归查找父分组并把新图层挂进去。 */
+    private fun addLayerIntoList(
+        layers: List<LayerDocument>,
+        parentLayerId: String,
+        layer: LayerDocument
+    ): Pair<List<LayerDocument>, Boolean> {
+        var changed = false
+        val updated = layers.map { current ->
+            if (current is GroupLayerDocument) {
+                when {
+                    current.id == parentLayerId -> {
+                        changed = true
+                        current.copy(children = current.children + layer)
+                    }
+
+                    else -> {
+                        val (children, childChanged) = addLayerIntoList(
+                            layers = current.children,
+                            parentLayerId = parentLayerId,
+                            layer = layer
+                        )
+                        if (childChanged) {
+                            changed = true
+                            current.copy(children = children)
+                        } else {
+                            current
+                        }
+                    }
+                }
+            } else {
+                current
+            }
+        }
+        return updated to changed
     }
 }

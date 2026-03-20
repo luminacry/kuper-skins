@@ -8,13 +8,14 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * 生成演示壁纸的基础文档。
+ * 生成编辑器与运行时共用的演示文档。
  *
- * 这份工厂数据同时服务于运行时壁纸和编辑器初始预设，
- * 因此所有默认图层都在这里集中维护。
+ * 当前这份数据明确采用「项目 -> 组件 -> 子项」的层级，
+ * 让编辑器首页可以先显示项目内容，而不是直接跳进图形参数。
  */
 object DemoWallpaperDocumentFactory {
-    /** 根据当前视口和运行时状态生成一份完整文档。 */
+
+    /** 根据当前视口和运行时状态生成完整的演示文档。 */
     fun createDocument(
         viewport: RuntimeViewport,
         frameState: RuntimeFrameState
@@ -43,7 +44,7 @@ object DemoWallpaperDocumentFactory {
         val orbGlowSize = orbSize * 1.42f
         val orbCoreSize = orbSize * 0.28f
 
-        val layers = mutableListOf<LayerDocument>(
+        val mainVisualChildren = mutableListOf<LayerDocument>(
             ShapeLayerDocument(
                 id = "left-haze",
                 shapeKind = ShapeKind.CIRCLE,
@@ -105,7 +106,39 @@ object DemoWallpaperDocumentFactory {
                         style = ShapeStyleDocument(fillColor = Color.parseColor("#FFF9E8"))
                     )
                 )
+            )
+        )
+
+        val infoPanelChildren = mutableListOf<LayerDocument>(
+            ShapeLayerDocument(
+                id = "info-panel-bg",
+                shapeKind = ShapeKind.RECTANGLE,
+                bounds = infoPanelBounds,
+                style = ShapeStyleDocument(
+                    fillColor = Color.argb(176, 49, 71, 82),
+                    cornerRadius = width * 0.07f
+                )
             ),
+            TextLayerDocument(
+                id = "info-title",
+                text = "KLWP 运行中",
+                x = infoPanelBounds.left + width * 0.04f,
+                baselineY = infoPanelBounds.top + infoPanelBounds.height * 0.43f,
+                textSize = width * 0.076f,
+                color = Color.WHITE,
+                isBold = true
+            ),
+            TextLayerDocument(
+                id = "info-clock",
+                text = "时间 " + DateFormat.format("HH:mm:ss", frameState.wallClockMillis),
+                x = infoPanelBounds.left + width * 0.04f,
+                baselineY = infoPanelBounds.top + infoPanelBounds.height * 0.68f,
+                textSize = width * 0.045f,
+                color = Color.parseColor("#D7E5EB")
+            )
+        )
+
+        val wallpaperChildren = mutableListOf<LayerDocument>(
             ShapeLayerDocument(
                 id = "right-haze",
                 shapeKind = ShapeKind.CIRCLE,
@@ -116,49 +149,41 @@ object DemoWallpaperDocumentFactory {
                     height = minSide * 0.38f
                 ),
                 style = ShapeStyleDocument(fillColor = Color.argb(74, 47, 66, 79))
-            ),
-            GroupLayerDocument(
-                id = "info-panel",
-                children = listOf(
-                    ShapeLayerDocument(
-                        id = "info-panel-bg",
-                        shapeKind = ShapeKind.RECTANGLE,
-                        bounds = infoPanelBounds,
-                        style = ShapeStyleDocument(
-                            fillColor = Color.argb(176, 49, 71, 82),
-                            cornerRadius = width * 0.07f
+            )
+        )
+
+        buildRippleLayer(viewport, frameState)?.let(wallpaperChildren::add)
+
+        return WallpaperDocument(
+            background = BackgroundDocument.Solid(Color.parseColor("#1C1C1C")),
+            layers = listOf(
+                GroupLayerDocument(
+                    id = "project-hh301",
+                    children = listOf(
+                        GroupLayerDocument(
+                            id = "component-main-visual",
+                            children = mainVisualChildren
+                        ),
+                        GroupLayerDocument(
+                            id = "component-info-panel",
+                            children = infoPanelChildren
                         )
-                    ),
-                    TextLayerDocument(
-                        id = "info-title",
-                        text = "KLWP 运行中",
-                        x = infoPanelBounds.left + width * 0.04f,
-                        baselineY = infoPanelBounds.top + infoPanelBounds.height * 0.43f,
-                        textSize = width * 0.076f,
-                        color = Color.WHITE,
-                        isBold = true
-                    ),
-                    TextLayerDocument(
-                        id = "info-clock",
-                        text = "时间 " + DateFormat.format("HH:mm:ss", frameState.wallClockMillis),
-                        x = infoPanelBounds.left + width * 0.04f,
-                        baselineY = infoPanelBounds.top + infoPanelBounds.height * 0.68f,
-                        textSize = width * 0.045f,
-                        color = Color.parseColor("#D7E5EB")
+                    )
+                ),
+                GroupLayerDocument(
+                    id = "project-main-wallpaper",
+                    children = listOf(
+                        GroupLayerDocument(
+                            id = "component-atmosphere",
+                            children = wallpaperChildren
+                        )
                     )
                 )
             )
         )
-
-        buildRippleLayer(viewport, frameState)?.let(layers::add)
-
-        return WallpaperDocument(
-            background = BackgroundDocument.Solid(Color.parseColor("#1C1C1C")),
-            layers = layers
-        )
     }
 
-    /** 当用户触摸桌面时，额外叠加一层短暂的涟漪效果。 */
+    /** 触摸时叠加短暂的波纹反馈，仍然挂在项目层级里。 */
     private fun buildRippleLayer(
         viewport: RuntimeViewport,
         frameState: RuntimeFrameState

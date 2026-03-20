@@ -269,8 +269,11 @@ class EditorRuntimePreviewView @JvmOverloads constructor(
     }
 
     /** 新增图形后会自动选中新图层。 */
-    fun addShape(shapeKind: ShapeKind): String? {
-        val layerId = runtime.addShape(shapeKind) ?: return null
+    fun addShape(
+        shapeKind: ShapeKind,
+        parentLayerId: String? = null
+    ): String? {
+        val layerId = runtime.addShape(shapeKind, parentLayerId) ?: return null
         updateSelectedLayer(layerId, notify = true)
         dispatchCurrentSnapshot(force = true)
         invalidate()
