@@ -16,7 +16,7 @@
         <!-- 顶部菜单栏：保留状态栏留白，但不直接展示系统状态内容。 -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="46dp"
+            android:layout_height="44dp"
             android:background="@color/editor_bg"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -24,6 +24,7 @@
             android:paddingEnd="4dp">
 
             <ImageView
+                android:id="@+id/button_editor_menu"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:contentDescription="@string/editor_menu"
@@ -46,7 +47,7 @@
                     android:fontFamily="sans-serif-medium"
                     android:text="@string/editor_header_default_title"
                     android:textColor="@color/editor_text_primary"
-                    android:textSize="17sp" />
+                    android:textSize="16sp" />
 
                 <TextView
                     android:id="@+id/text_header_subtitle"
@@ -55,7 +56,7 @@
                     android:fontFamily="sans-serif"
                     android:text="@string/editor_header_default_subtitle"
                     android:textColor="@color/editor_text_secondary"
-                    android:textSize="10sp" />
+                    android:textSize="9sp" />
             </LinearLayout>
 
             <ImageButton
@@ -182,6 +183,14 @@
                     android:contentDescription="@null"
                     android:scaleType="fitXY"
                     android:src="@drawable/bg_pencil_tools_rail_full" />
+
+                <View
+                    android:id="@+id/view_tools_active_indicator"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="top|center_horizontal"
+                    android:layout_marginTop="13dp"
+                    android:background="@drawable/bg_editor_tool_indicator" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -417,11 +426,11 @@
     <!-- 右侧属性浮层：只有进入编辑态时才覆盖显示。 -->
     <ScrollView
         android:id="@+id/editor_property_panel"
-        android:layout_width="182dp"
-        android:layout_height="336dp"
+        android:layout_width="188dp"
+        android:layout_height="344dp"
         android:layout_gravity="top|end"
         android:layout_marginTop="144dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="6dp"
         android:background="@drawable/bg_editor_property_panel"
         android:fillViewport="true"
         android:scrollbars="none"
@@ -431,7 +440,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:paddingStart="12dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="10dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -453,11 +465,11 @@
 
                 <ImageButton
                     android:id="@+id/button_property_close"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:background="@drawable/bg_editor_chip_idle"
                     android:contentDescription="@string/editor_property_close"
-                    android:padding="7dp"
+                    android:padding="6dp"
                     android:src="@drawable/ic_editor_close"
                     android:tint="@color/editor_text_primary" />
             </LinearLayout>
@@ -465,11 +477,10 @@
             <Button
                 android:id="@+id/button_property_delete"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_height="34dp"
+                android:layout_marginTop="10dp"
                 android:background="@drawable/bg_editor_secondary_button"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
+                android:fontFamily="sans-serif-medium"
                 android:text="@string/editor_delete_layer"
                 android:textAllCaps="false"
                 android:textColor="@color/editor_text_primary"
@@ -480,7 +491,7 @@
                 android:id="@+id/property_fill_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="12dp"
                 android:orientation="vertical">
 
                 <TextView
@@ -493,29 +504,29 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="7dp"
                     android:orientation="horizontal">
 
                     <ImageButton
                         android:id="@+id/button_fill_color_rose"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
                         android:background="@drawable/bg_editor_fill_swatch"
                         android:contentDescription="@string/editor_fill_color_rose" />
 
                     <ImageButton
                         android:id="@+id/button_fill_color_blue"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_marginStart="8dp"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="10dp"
                         android:background="@drawable/bg_editor_fill_swatch"
                         android:contentDescription="@string/editor_fill_color_blue" />
 
                     <ImageButton
                         android:id="@+id/button_fill_color_mint"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:layout_marginStart="8dp"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="10dp"
                         android:background="@drawable/bg_editor_fill_swatch"
                         android:contentDescription="@string/editor_fill_color_mint" />
                 </LinearLayout>
@@ -524,7 +535,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="12dp"
                 android:text="@string/editor_property_position_x"
                 android:textColor="@color/editor_text_secondary"
                 android:textSize="11sp" />
@@ -543,11 +554,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:max="400"
-                android:progress="200" />
+                android:progress="200"
+                android:progressTint="@color/editor_accent"
+                android:thumbTint="@color/editor_accent" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="@string/editor_property_position_y"
                 android:textColor="@color/editor_text_secondary"
                 android:textSize="11sp" />
@@ -566,11 +580,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:max="400"
-                android:progress="200" />
+                android:progress="200"
+                android:progressTint="@color/editor_accent"
+                android:thumbTint="@color/editor_accent" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="@string/editor_property_opacity"
                 android:textColor="@color/editor_text_secondary"
                 android:textSize="11sp" />
@@ -589,11 +606,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:max="100"
-                android:progress="100" />
+                android:progress="100"
+                android:progressTint="@color/editor_accent"
+                android:thumbTint="@color/editor_accent" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="@string/editor_property_scale"
                 android:textColor="@color/editor_text_secondary"
                 android:textSize="11sp" />
@@ -613,7 +633,31 @@
                 android:layout_height="wrap_content"
                 android:max="400"
                 android:min="20"
-                android:progress="100" />
+                android:progress="100"
+                android:progressTint="@color/editor_accent"
+                android:thumbTint="@color/editor_accent" />
         </LinearLayout>
     </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/project_panel_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <FrameLayout
+            android:id="@+id/project_panel_card_host"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="64dp"
+            android:layout_marginEnd="8dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <include layout="@layout/popup_project_panel" />
+        </FrameLayout>
+    </FrameLayout>
 </FrameLayout>

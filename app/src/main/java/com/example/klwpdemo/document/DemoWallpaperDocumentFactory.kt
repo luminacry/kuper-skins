@@ -5,25 +5,19 @@ import android.text.format.DateFormat
 import com.example.klwpdemo.runtime.RuntimeFrameState
 import com.example.klwpdemo.runtime.RuntimeViewport
 import kotlin.math.min
-import kotlin.math.sin
 
 /**
- * 生成编辑器与运行时共用的演示文档。
+ * 生成演示模板文档，并在运行时按需附加动态效果。
  *
  * 当前这份数据明确采用「项目 -> 组件 -> 子项」的层级，
  * 让编辑器首页可以先显示项目内容，而不是直接跳进图形参数。
  */
 object DemoWallpaperDocumentFactory {
 
-    /** 根据当前视口和运行时状态生成完整的演示文档。 */
-    fun createDocument(
-        viewport: RuntimeViewport,
-        frameState: RuntimeFrameState
-    ): WallpaperDocument {
+    /** 根据当前视口生成一份可落盘的静态模板文档。 */
+    fun createTemplateDocument(viewport: RuntimeViewport): WallpaperDocument {
         val width = viewport.width.toFloat()
         val height = viewport.height.toFloat()
-        val pulse = (((sin(frameState.uptimeMillis / 620.0) + 1.0) * 0.5) * 8.0).toFloat()
-        val drift = (((sin(frameState.uptimeMillis / 1450.0) + 1.0) * 0.5) - 0.5).toFloat()
         val minSide = min(width, height)
 
         val outlineBounds = LayerBoundsDocument(
@@ -34,13 +28,13 @@ object DemoWallpaperDocumentFactory {
         )
         val infoPanelBounds = LayerBoundsDocument(
             left = width * 0.09f,
-            top = height * 0.58f + drift * 4f,
+            top = height * 0.58f,
             width = width * 0.57f,
             height = height * 0.16f
         )
         val orbSize = minSide * 0.21f
-        val orbCenterX = width * 0.57f + drift * width * 0.02f
-        val orbCenterY = height * 0.27f + drift * height * 0.01f
+        val orbCenterX = width * 0.57f
+        val orbCenterY = height * 0.27f
         val orbGlowSize = orbSize * 1.42f
         val orbCoreSize = orbSize * 0.28f
 
@@ -68,9 +62,7 @@ object DemoWallpaperDocumentFactory {
             ),
             GroupLayerDocument(
                 id = "orb-cluster",
-                transform = LayerTransformDocument(
-                    translationY = pulse * 0.25f
-                ),
+                transform = LayerTransformDocument(),
                 children = listOf(
                     ShapeLayerDocument(
                         id = "orb-glow",
@@ -130,7 +122,7 @@ object DemoWallpaperDocumentFactory {
             ),
             TextLayerDocument(
                 id = "info-clock",
-                text = "时间 " + DateFormat.format("HH:mm:ss", frameState.wallClockMillis),
+                text = "时间 --:--:--",
                 x = infoPanelBounds.left + width * 0.04f,
                 baselineY = infoPanelBounds.top + infoPanelBounds.height * 0.68f,
                 textSize = width * 0.045f,
@@ -151,8 +143,6 @@ object DemoWallpaperDocumentFactory {
                 style = ShapeStyleDocument(fillColor = Color.argb(74, 47, 66, 79))
             )
         )
-
-        buildRippleLayer(viewport, frameState)?.let(wallpaperChildren::add)
 
         return WallpaperDocument(
             background = BackgroundDocument.Solid(Color.parseColor("#1C1C1C")),
@@ -179,6 +169,34 @@ object DemoWallpaperDocumentFactory {
                         )
                     )
                 )
+            )
+        )
+    }
+
+    /** 在不污染项目源文档的前提下，为运行时附加动态文本和触摸波纹。 */
+    fun decorateRuntimeDocument(
+        document: WallpaperDocument,
+        viewport: RuntimeViewport,
+        frameState: RuntimeFrameState
+    ): WallpaperDocument {
+        val withoutRipple = document.copy(
+            layers = removeLayerById(document.layers, "touch-ripple")
+        )
+        val withLiveClock = withoutRipple.copy(
+            layers = updateTextLayerById(
+                layers = withoutRipple.layers,
+                layerId = "info-clock",
+                updater = { layer ->
+                    layer.copy(text = "时间 " + DateFormat.format("HH:mm:ss", frameState.wallClockMillis))
+                }
+            )
+        )
+        val rippleLayer = buildRippleLayer(viewport, frameState) ?: return withLiveClock
+        return withLiveClock.copy(
+            layers = appendLayerToGroup(
+                layers = withLiveClock.layers,
+                groupId = "component-atmosphere",
+                layer = rippleLayer
             )
         )
     }
@@ -214,5 +232,70 @@ object DemoWallpaperDocumentFactory {
                 strokeWidth = 4f
             )
         )
+    }
+
+    /** 递归移除指定 id 的图层，避免运行时波纹被持久化。 */
+    private fun removeLayerById(
+        layers: List<LayerDocument>,
+        layerId: String
+    ): List<LayerDocument> {
+        return layers.mapNotNull { layer ->
+            when {
+                layer.id == layerId -> null
+                layer is GroupLayerDocument -> layer.copy(
+                    children = removeLayerById(layer.children, layerId)
+                )
+
+                else -> layer
+            }
+        }
+    }
+
+    /** 递归更新指定文本图层。 */
+    private fun updateTextLayerById(
+        layers: List<LayerDocument>,
+        layerId: String,
+        updater: (TextLayerDocument) -> TextLayerDocument
+    ): List<LayerDocument> {
+        return layers.map { layer ->
+            when {
+                layer is TextLayerDocument && layer.id == layerId -> updater(layer)
+                layer is GroupLayerDocument -> layer.copy(
+                    children = updateTextLayerById(layer.children, layerId, updater)
+                )
+
+                else -> layer
+            }
+        }
+    }
+
+    /** 把临时图层挂到目标组件下，找不到目标组时保持原文档不变。 */
+    private fun appendLayerToGroup(
+        layers: List<LayerDocument>,
+        groupId: String,
+        layer: LayerDocument
+    ): List<LayerDocument> {
+        var inserted = false
+        val updatedLayers = layers.map { current ->
+            when {
+                current is GroupLayerDocument && current.id == groupId -> {
+                    inserted = true
+                    current.copy(children = current.children + layer)
+                }
+
+                current is GroupLayerDocument -> {
+                    val updatedChildren = appendLayerToGroup(current.children, groupId, layer)
+                    if (updatedChildren !== current.children) {
+                        inserted = true
+                        current.copy(children = updatedChildren)
+                    } else {
+                        current
+                    }
+                }
+
+                else -> current
+            }
+        }
+        return if (inserted) updatedLayers else layers
     }
 }

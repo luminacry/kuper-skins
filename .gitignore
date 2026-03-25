@@ -3,6 +3,7 @@ build/
 app/build/
 .kotlin/
 .tmp/
+outputs/
 local.properties
 gradle/gradle-daemon-jvm.properties
 *.iml

@@ -53,6 +53,7 @@ class DemoWallpaperRuntime(
     )
     private var lastBatteryRefreshUptime = -1L
     private var latestDocumentSnapshot: WallpaperDocument? = null
+    private var baseDocument: WallpaperDocument? = null
     private val layerTransformOverrides = mutableMapOf<String, LayerTransformDocument>()
     private var generatedShapeSequence = 0L
 
@@ -67,6 +68,18 @@ class DemoWallpaperRuntime(
     /** 同步桌面滚动偏移，用于壁纸视差效果。 */
     fun updateOffset(xOffset: Float) {
         this.xOffset = xOffset.coerceIn(0f, 1f)
+    }
+
+    /** 手动指定运行时当前使用的基础文档。 */
+    fun setBaseDocument(document: WallpaperDocument) {
+        if (baseDocument == document && latestDocumentSnapshot == document) {
+            return
+        }
+        baseDocument = document
+        if (editorMode) {
+            documentRepository.setDocument(document)
+        }
+        latestDocumentSnapshot = document
     }
 
     /** 记录触摸位置与起始时间，用于生成涟漪反馈。 */
@@ -99,17 +112,19 @@ class DemoWallpaperRuntime(
             rippleProgress = rippleProgress,
             batteryStatus = batteryStatus
         )
-        val document = if (editorMode) {
-            resolveEditorDocument(frameState)
+        val editableDocument = if (editorMode) {
+            resolveEditorDocument()
         } else {
-            val baseDocument = DemoWallpaperDocumentFactory.createDocument(
-                viewport = viewport,
-                frameState = frameState
-            )
-            applyTransformOverrides(baseDocument)
+            val resolvedBaseDocument = resolveRuntimeDocument()
+            applyTransformOverrides(resolvedBaseDocument)
         }
-        latestDocumentSnapshot = document
-        val scene = compiler.compile(document)
+        latestDocumentSnapshot = editableDocument
+        val renderDocument = DemoWallpaperDocumentFactory.decorateRuntimeDocument(
+            document = editableDocument,
+            viewport = viewport,
+            frameState = frameState
+        )
+        val scene = compiler.compile(renderDocument)
         renderer.render(scene, canvas, viewport)
     }
 
@@ -126,10 +141,7 @@ class DemoWallpaperRuntime(
         if (!editorMode || !viewport.isReady) {
             return null
         }
-        initializeEditorDocumentIfNeeded(
-            uptimeMillis = SystemClock.uptimeMillis(),
-            wallClockMillis = System.currentTimeMillis()
-        )
+        initializeEditorDocumentIfNeeded()
         val currentDocument = documentRepository.snapshot() ?: return null
         val layerId = createShapeId(shapeKind)
         val shapeCount = countShapeLayers(currentDocument.layers)
@@ -255,38 +267,26 @@ class DemoWallpaperRuntime(
     }
 
     /** 编辑模式下优先使用文档仓库里的当前文档。 */
-    private fun resolveEditorDocument(
-        frameState: RuntimeFrameState
-    ): WallpaperDocument {
-        initializeEditorDocumentIfNeeded(
-            uptimeMillis = frameState.uptimeMillis,
-            wallClockMillis = frameState.wallClockMillis
-        )
+    private fun resolveEditorDocument(): WallpaperDocument {
+        initializeEditorDocumentIfNeeded()
         return documentRepository.snapshot()
-            ?: DemoWallpaperDocumentFactory.createDocument(viewport, frameState)
+            ?: baseDocument
+            ?: DemoWallpaperDocumentFactory.createTemplateDocument(viewport)
     }
 
     /** 首次进入编辑模式时，用当前运行时状态初始化一份可编辑文档。 */
-    private fun initializeEditorDocumentIfNeeded(
-        uptimeMillis: Long,
-        wallClockMillis: Long
-    ) {
+    private fun initializeEditorDocumentIfNeeded() {
         if (!editorMode || documentRepository.hasDocument() || !viewport.isReady) {
             return
         }
-        val document = DemoWallpaperDocumentFactory.createDocument(
-            viewport = viewport,
-            frameState = RuntimeFrameState(
-                uptimeMillis = uptimeMillis,
-                wallClockMillis = wallClockMillis,
-                xOffset = xOffset,
-                touchSample = touchSample,
-                rippleProgress = resolveRippleProgress(uptimeMillis),
-                batteryStatus = batteryStatus
-            )
-        )
+        val document = baseDocument ?: DemoWallpaperDocumentFactory.createTemplateDocument(viewport)
         documentRepository.setDocument(document)
         latestDocumentSnapshot = document
+    }
+
+    /** 非编辑态优先使用当前项目文档，否则退回默认模板。 */
+    private fun resolveRuntimeDocument(): WallpaperDocument {
+        return baseDocument ?: DemoWallpaperDocumentFactory.createTemplateDocument(viewport)
     }
 
     /** 非编辑模式下，把临时覆盖的变换重新套回生成文档。 */

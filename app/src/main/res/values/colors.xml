@@ -13,4 +13,5 @@
     <color name="editor_layer_header">#3A3A3A</color>
     <color name="editor_list_surface">#FFFFFF</color>
     <color name="editor_text_on_dark">#FFFFFF</color>
+    <color name="editor_accent">#0E9B95</color>
 </resources>

@@ -11,7 +11,9 @@ import android.os.SystemClock
 import android.service.wallpaper.WallpaperService
 import android.view.MotionEvent
 import android.view.SurfaceHolder
+import com.example.klwpdemo.project.ProjectSessionManager
 import com.example.klwpdemo.runtime.DemoWallpaperRuntime
+import com.example.klwpdemo.runtime.RuntimeViewport
 
 /** 真正提供动态壁纸绘制入口的系统 Service。 */
 class DemoWallpaperService : WallpaperService() {
@@ -25,6 +27,8 @@ class DemoWallpaperService : WallpaperService() {
         private val frameDelayMs = 33L
         /** 壁纸运行时，负责生成文档并执行渲染。 */
         private val runtime = DemoWallpaperRuntime(this@DemoWallpaperService)
+        /** 当前壁纸可用视口，供会话层回源加载项目时复用。 */
+        private var currentViewport = RuntimeViewport(width = 0, height = 0)
 
         /** 主线程调度器，用于驱动持续刷新。 */
         private val handler = Handler(Looper.getMainLooper())
@@ -40,12 +44,21 @@ class DemoWallpaperService : WallpaperService() {
 
         /** 当前壁纸是否处于可见状态。 */
         private var visible = false
+        /** 编辑器修改活动项目时，让壁纸服务马上吃到最新文档。 */
+        private val activeProjectListener = ProjectSessionManager.ActiveProjectListener { project ->
+            project ?: return@ActiveProjectListener
+            runtime.setBaseDocument(project.document)
+            if (visible) {
+                drawFrame()
+            }
+        }
 
         /** 初始化引擎时打开触摸和偏移量监听。 */
         override fun onCreate(surfaceHolder: SurfaceHolder) {
             super.onCreate(surfaceHolder)
             setTouchEventsEnabled(true)
             setOffsetNotificationsEnabled(true)
+            ProjectSessionManager.registerActiveProjectListener(activeProjectListener)
         }
 
         /** 根据可见性决定是否继续帧循环。 */
@@ -53,6 +66,7 @@ class DemoWallpaperService : WallpaperService() {
             this.visible = visible
             handler.removeCallbacks(drawRunner)
             if (visible) {
+                syncRuntimeDocumentFromSession()
                 drawFrame()
                 handler.postDelayed(drawRunner, frameDelayMs)
             }
@@ -66,7 +80,9 @@ class DemoWallpaperService : WallpaperService() {
             height: Int
         ) {
             super.onSurfaceChanged(holder, format, width, height)
+            currentViewport = RuntimeViewport(width = width, height = height)
             runtime.updateViewport(width, height)
+            syncRuntimeDocumentFromSession()
             drawFrame()
         }
 
@@ -111,6 +127,7 @@ class DemoWallpaperService : WallpaperService() {
         /** 引擎销毁时清理回调。 */
         override fun onDestroy() {
             handler.removeCallbacks(drawRunner)
+            ProjectSessionManager.unregisterActiveProjectListener(activeProjectListener)
             super.onDestroy()
         }
 
@@ -131,6 +148,7 @@ class DemoWallpaperService : WallpaperService() {
             if (!surface.isValid) {
                 return
             }
+            syncRuntimeDocumentFromSession()
 
             var canvas: Canvas? = null
             try {
@@ -152,6 +170,19 @@ class DemoWallpaperService : WallpaperService() {
                     }
                 }
             }
+        }
+
+        /** 壁纸端优先吃活动项目快照，内存没有时再从本地项目文件回源。 */
+        private fun syncRuntimeDocumentFromSession() {
+            val project = if (currentViewport.isReady) {
+                ProjectSessionManager.resolveActiveProject(
+                    context = this@DemoWallpaperService,
+                    viewport = currentViewport
+                )
+            } else {
+                ProjectSessionManager.resolveActiveProject(this@DemoWallpaperService)
+            }
+            project?.let { runtime.setBaseDocument(it.document) }
         }
     }
 }

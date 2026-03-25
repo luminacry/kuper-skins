@@ -4,7 +4,7 @@
     <string name="wallpaper_name">KLWP 演示壁纸</string>
     <string name="wallpaper_description">用于编辑器预览与运行时联调的演示壁纸。</string>
 
-    <string name="editor_menu">打开菜单</string>
+    <string name="editor_menu">返回项目页</string>
     <string name="editor_save">保存</string>
     <string name="editor_history">历史</string>
     <string name="editor_add">新增图层</string>
@@ -75,6 +75,8 @@
     <string name="editor_status_back_parent">返回上级</string>
     <string name="editor_status_component_tag">组件</string>
     <string name="editor_status_project_tag">项目</string>
+    <string name="editor_status_wallpaper_action">去设置</string>
+    <string name="editor_status_wallpaper_active">已同步</string>
 
     <string name="editor_shape_only">当前逻辑优先走项目与组件层级，请先进入具体子项</string>
     <string name="editor_shape_object_default">当前对象 · 方形 01</string>
@@ -92,4 +94,66 @@
     <string name="editor_shape_value_placeholder">--</string>
     <string name="editor_shape_value_px">%1$d px</string>
     <string name="editor_shape_value_degrees">%1$d°</string>
+
+    <string name="project_menu_create">新建项目</string>
+    <string name="project_menu_duplicate">另存副本</string>
+    <string name="project_menu_recent_label">最近项目</string>
+    <string name="project_menu_current_format">%1$s · 当前</string>
+    <string name="project_menu_save_now">立即保存</string>
+    <string name="project_name_new_prefix">项目</string>
+    <string name="project_name_copy_prefix">副本</string>
+    <string name="project_created_format">已创建项目：%1$s</string>
+    <string name="project_duplicate_success_format">已生成副本：%1$s</string>
+    <string name="project_duplicate_failed">当前没有可复制的项目</string>
+    <string name="project_save_success">项目已保存</string>
+    <string name="project_save_failed">当前没有可保存的项目</string>
+    <string name="project_switch_failed">切换项目失败</string>
+    <string name="project_switch_current">当前已经是这个项目</string>
+    <string name="project_switch_success_format">已切换到项目：%1$s</string>
+    <string name="project_panel_label">当前项目</string>
+    <string name="project_panel_empty_name">未命名项目</string>
+    <string name="project_menu_rename">重命名</string>
+    <string name="project_menu_delete">删除项目</string>
+    <string name="project_recent_current">当前</string>
+    <string name="project_recent_updated_format">更新于 %1$s</string>
+    <string name="project_dialog_name_hint">请输入项目名称</string>
+    <string name="project_dialog_cancel">取消</string>
+    <string name="project_dialog_confirm">确认</string>
+    <string name="project_dialog_rename_title">重命名项目</string>
+    <string name="project_dialog_rename_message">仅调整当前项目名称，不会改动内部内容。</string>
+    <string name="project_dialog_delete_title">删除当前项目</string>
+    <string name="project_dialog_delete_message_format">删除“%1$s”后会自动切到其他项目；如果没有其他项目，会补一个默认项目。</string>
+    <string name="project_dialog_name_empty">项目名称不能为空</string>
+    <string name="project_rename_failed">项目重命名失败</string>
+    <string name="project_rename_success_format">已重命名为：%1$s</string>
+    <string name="project_delete_failed">项目删除失败</string>
+    <string name="project_delete_success_format">已删除项目：%1$s</string>
+    <string name="project_panel_action_save">保存</string>
+    <string name="project_panel_action_new">新建</string>
+    <string name="project_panel_action_duplicate">复制</string>
+    <string name="project_panel_action_rename">重命名</string>
+    <string name="project_panel_action_delete">删除</string>
+
+    <string name="project_home_title">项目</string>
+    <string name="project_home_subtitle">先选择项目，再进入编辑器细抠组件与图层。</string>
+    <string name="project_home_count_format">%1$d 个项目</string>
+    <string name="project_home_continue">继续编辑</string>
+    <string name="project_home_apply">设为壁纸</string>
+    <string name="project_home_apply_active">已同步到桌面</string>
+    <string name="project_home_create">新建项目</string>
+    <string name="project_home_create_first">创建第一个项目</string>
+    <string name="project_home_empty_title">还没有项目</string>
+    <string name="project_home_empty_meta">创建后会自动进入编辑器</string>
+    <string name="project_home_empty_hint">项目是最外层容器，进入后再把图形和组件放进去。</string>
+    <string name="project_home_card_hint">当前壁纸运行时会优先读取这个活动项目。</string>
+    <string name="project_home_card_hint_active">当前桌面已经启用这套动态壁纸，切换项目后会自动同步。</string>
+    <string name="project_home_other_projects">其他项目</string>
+    <string name="project_home_all_projects">项目列表</string>
+    <string name="project_home_recent_hint">按最近更新时间排序</string>
+    <string name="project_home_empty_recent_title">暂时没有其他项目</string>
+    <string name="project_home_empty_recent_message">继续打磨当前项目，或者再新建一个备用方案。</string>
+    <string name="project_home_empty_library_title">还没有历史项目</string>
+    <string name="project_home_empty_library_message">创建第一个项目后，这里会展示你的项目列表。</string>
+    <string name="wallpaper_apply_already_active_format">当前项目“%1$s”已同步到桌面</string>
+    <string name="wallpaper_apply_open_failed">无法打开壁纸设置</string>
 </resources>

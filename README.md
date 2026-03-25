@@ -1,83 +1,101 @@
-# KLWP Editor Replica Demo
+# Kuper Skins
 
 一个基于 Android 原生 `WallpaperService + Canvas` 的 KLWP 编辑器复刻实验项目。
 
-当前版本重点不在完整功能生态，而在两件事：
+当前阶段的目标很明确：先把“项目首页 -> 编辑器预览 -> 壁纸运行时 -> 本地持久化 -> 系统设为动态壁纸”这条链路打通，再继续往更完整的编辑能力推进。
 
-- 复刻 KLWP 编辑器页的 UI 结构、比例和交互层次
-- 打通“编辑器预览 -> 运行时文档 -> 动态壁纸渲染”的最小闭环
+## 当前已完成
 
-## 当前包含内容
-
+- `ProjectHomeActivity`
+  - 中文项目首页
+  - 当前项目卡片
+  - 最近项目列表
+  - 新建项目、继续编辑、设为壁纸入口
 - `MainActivity`
-  - 中文化编辑器界面
-  - 顶部菜单栏、中央预览区、右侧工具塔、底部图层列表、右侧属性面板
-  - 图层选中、显隐、删除、填充色修改、位移/透明度/缩放调整
+  - 中文化编辑器页
+  - 顶部工具栏、左侧项目条、右侧工具塔、底部图层区
+  - 项目态与组件态切换
+  - 图层选中、删除、可见性切换、基础属性调节
 - `EditorRuntimePreviewView`
-  - 预览区实时渲染
+  - 编辑器内实时预览
   - 图层点击选中
-  - 形状拖拽与缩放
-  - 文档快照回传给编辑器 UI
-- `DemoWallpaperRuntime`
-  - 编辑模式与壁纸模式共用运行时
-  - 文档仓库、撤销/重做、形状新增与删除
+  - 拖拽与基础变换联动
 - `DemoWallpaperService`
-  - 动态壁纸绘制入口
-  - 页面偏移、触摸涟漪、电量采样
+  - 动态壁纸运行时入口
+  - 从当前活动项目恢复壁纸文档
+- `ProjectSessionManager`
+  - 项目创建、切换、复制、重命名、删除
+  - 活动项目持久化
+  - 编辑器与壁纸运行时状态联动
+- `WallpaperApplyHelper`
+  - 首页与编辑器共用的“设为壁纸”跳转逻辑
 
-## 构建环境
+## 设计稿与实机截图
 
-本项目本地验证环境如下：
+### 编辑器成品稿
+
+![编辑器成品稿](docs/assets/editor-design-board.png)
+
+### 逻辑流程图
+
+![逻辑流程图](docs/assets/logic-flow-board.png)
+
+### 项目首页实机
+
+![项目首页实机](docs/assets/project-home-current.png)
+
+### 编辑器实机
+
+![编辑器实机](docs/assets/editor-device-current.png)
+
+## 目录说明
+
+- `app/src/main/java/com/example/klwpdemo/`
+  - 应用主逻辑
+- `app/src/main/res/`
+  - 布局、颜色、图标与界面资源
+- `docs/`
+  - 设计分析、路线图与说明文档
+- `docs/assets/`
+  - README 中使用的设计稿与实机截图
+
+## 本地构建
+
+建议环境：
 
 - Android Gradle Plugin `9.0.1`
 - Gradle `9.2.1`
 - Java `17+`
-- Android SDK platform `36.1`
-- Build tools `36.1.0`
+- Android SDK Platform `36`
 
-如果你的环境变量已经正确配置，可直接执行：
+常用命令：
 
 ```powershell
 .\gradlew.bat assembleDebug
-.\gradlew.bat assembleRelease
+.\gradlew.bat installDebug
 ```
 
-如果需要临时指定本机路径，可以按下面这样设置：
+如需生成 release：
 
 ```powershell
-$env:JAVA_HOME='C:\Users\HUA\.jdks\openjdk-25.0.2'
-$env:ANDROID_HOME='C:\Users\HUA\AppData\Local\Android\Sdk'
-$env:ANDROID_SDK_ROOT='C:\Users\HUA\AppData\Local\Android\Sdk'
 .\gradlew.bat assembleRelease
 ```
 
-## 安装包输出
+## 使用流程
 
-调试包输出：
+1. 打开应用，先进入项目首页。
+2. 点击“继续编辑”进入编辑器。
+3. 在编辑器里调整项目与组件内容。
+4. 通过首页或编辑器底部的“设为壁纸/去设置”进入系统动态壁纸预览页。
+5. 在系统页手动点一次“设为”，完成最终应用。
 
-```text
-app/build/outputs/apk/debug/app-debug.apk
-```
+## 当前仓库保留内容
 
-正式版包输出：
+本仓库只保留以下内容：
 
-```text
-app/build/outputs/apk/release/app-release.apk
-```
+- 可运行的 Android 源码
+- 必要的资源文件
+- 必要的设计分析文档
+- 少量用于说明成果的设计稿和实机截图
 
-## 关于 release 签名
-
-当前仓库没有独立发布 keystore。
-
-为了先产出“可安装”的 release 安装包，当前 `release` 构建临时复用了本机默认 debug keystore。
-这适合真机安装、自测和视觉对比，不适合直接作为应用市场正式发布包。
-
-如果后续要上架或长期分发，需要再补正式 release keystore，并替换当前签名配置。
-
-## 快速体验
-
-1. 安装 `app-debug.apk` 或 `app-release.apk`
-2. 打开应用进入编辑器首页
-3. 在中间预览区点击图层
-4. 通过底部列表和右侧属性面板调整图层
-5. 如需测试壁纸运行态，再进入系统壁纸预览流程
+调试过程中的临时输出与中间产物不再作为仓库内容维护。

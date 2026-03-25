@@ -219,6 +219,14 @@ class EditorRuntimePreviewView @JvmOverloads constructor(
         return true
     }
 
+    /** 从外部项目仓库装入一份完整文档。 */
+    fun loadDocument(document: WallpaperDocument) {
+        runtime.setBaseDocument(document)
+        updateSelectedLayer(null, notify = true)
+        dispatchCurrentSnapshot(force = true)
+        invalidate()
+    }
+
     /** 供外部属性面板直接覆盖选中图层的变换值。 */
     fun setLayerTransformOverride(
         layerId: String,
